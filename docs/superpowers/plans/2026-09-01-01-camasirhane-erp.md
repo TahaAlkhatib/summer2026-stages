@@ -1340,11 +1340,11 @@ git commit -m "Proje 1: aşama güncelleme, barkod arama ve müşteri takip ucu"
 
 | Metot | Yol | Rol | Gövde | Yanıt |
 |-------|-----|-----|-------|-------|
-| POST | `/api/payments` | admin, kasiyer | `{order_id, amount, method}` | `201 {payment, order:{id, total_amount, paid_amount, remaining}}` |
+| POST | `/api/payments` | admin, kasiyer, **kurye** | `{order_id, amount, method}` | `201 {payment, order:{id, total_amount, paid_amount, remaining}}` |
 | GET | `/api/couriers/tasks?status=` | kurye → kendi görevleri, admin → tümü | — | `[{id, order_id, order_no, task_type, task_type_label, status, address, scheduled_at, customer_name, customer_phone, total_amount, paid_amount}]` |
 | PUT | `/api/couriers/tasks/:id/status` | kurye (kendi görevi), admin | `{status, note}` | güncellenen görev |
 
-**Kural (ödeme):** `amount` ≤ 0 → `400 { message: "Tutar sıfırdan büyük olmalıdır." }`. Kalan borçtan fazla ödeme → `400 { message: "Ödeme tutarı kalan borçtan fazla olamaz." }`. Ödeme sonrası `orders.paid_amount` yeniden hesaplanır (`SELECT COALESCE(SUM(amount),0) FROM payments WHERE order_id = $1`).
+**Kural (ödeme):** Kurye rolü de ödeme alabilir — Görev 13'teki kapıda tahsilat akışı bunu gerektirir. `amount` ≤ 0 → `400 { message: "Tutar sıfırdan büyük olmalıdır." }`. Kalan borçtan fazla ödeme → `400 { message: "Ödeme tutarı kalan borçtan fazla olamaz." }`. Ödeme sonrası `orders.paid_amount` yeniden hesaplanır (`SELECT COALESCE(SUM(amount),0) FROM payments WHERE order_id = $1`).
 
 **Kural (kurye):** Görev `tamamlandi` yapılırsa `completed_at = NOW()` yazılır; görev tipi `teslim` ise sipariş `teslim_edildi` durumuna geçer ve `order_status_history`'ye `'Kurye teslim etti'` notuyla kayıt düşer. Kurye kendi görevi olmayan bir görevi güncellemeye çalışırsa `403 { message: "Bu görev size ait değil." }`.
 

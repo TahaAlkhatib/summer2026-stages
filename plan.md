@@ -15,7 +15,7 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 
 | # | Klasör | Proje | Öğrenci | Durum |
 |---|--------|-------|---------|-------|
-| 1 | `01-camasirhane-erp/` | Çamaşırhane & Kuru Temizleme ERP | _(atanacak)_ | ⬜ Başlamadı |
+| 1 | `01-camasirhane-erp/` | Çamaşırhane & Kuru Temizleme ERP | _(atanacak)_ | 🟡 API bitti, istemciler sürüyor |
 | 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
 | 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
 | 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ⬜ Başlamadı |
@@ -181,7 +181,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 ## 7. Proje Detayları ve İlerleme
 
-### Proje 1 — Çamaşırhane & Kuru Temizleme ERP  ⬜
+### Proje 1 — Çamaşırhane & Kuru Temizleme ERP  🟡
 `01-camasirhane-erp/` · **Uygulama planı:** `docs/superpowers/plans/2026-09-01-01-camasirhane-erp.md` (18 görev)
 
 **Ana akış:** Sipariş alma → aşama takibi (Teslim Alındı → Yıkamada → Ütüde → Hazır → Teslim Edildi)
@@ -189,7 +189,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + PostgreSQL | ⬜ |
+| `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
 | `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | ⬜ İskelet hazır, kod yazılacak |
 | `apps/web-admin` | React + Vite | ⬜ |
 | `apps/mobile` | React Native (Expo) — kurye + müşteri | ⬜ |
@@ -290,7 +290,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + PostgreSQL | ⬜ |
+| `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
 | `apps/desktop` | Electron + React — giriş & irsaliye basımı | ⬜ |
 | `apps/web-merchant` | React + Vite (tacir portalı) | ⬜ |
 | `apps/mobile` | React Native (Expo) — sürücü | ⬜ |
@@ -321,4 +321,5 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-01 | Windows devri tamamlandı: 3 WinForms iskeleti üretilip senkronize edildi (`81d148d`). |
 | 2026-09-01 | `.csproj` dosyalarında `Nullable` kapatıldı (junior seviyesi kodda uyarı yığılmasını önlemek için). |
 | 2026-09-01 | Faz 0: `adb` ve `ANDROID_HOME` PATH'e eklendi. |
+| 2026-09-02 | Proje 1: Görev 1-8 tamamlandı — veritabanı şeması, demo verisi ve tüm API uçları çalışıyor. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
