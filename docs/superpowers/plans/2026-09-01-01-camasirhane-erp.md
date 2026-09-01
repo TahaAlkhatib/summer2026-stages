@@ -6,7 +6,7 @@
 
 **Architecture:** Tek bir Express + PostgreSQL API veritabanına yazan tek bileşendir. WinForms kasa uygulaması, React web yönetim paneli ve React Native mobil uygulaması bu API'ye HTTP/JSON ile konuşur; hiçbiri veritabanına doğrudan bağlanmaz. Kimlik doğrulama JWT ile yapılır, rol bilgisi token içinde taşınır ve controller içinde kontrol edilir.
 
-**Tech Stack:** Node.js 22 + Express 4 + `pg` + `bcryptjs` + `jsonwebtoken` · PostgreSQL 16 · React 18 + Vite + React Router + Axios · React Native (Expo SDK 51) · C# WinForms (.NET 8)
+**Tech Stack:** Node.js 22 + Express 4 + `pg` + `bcryptjs` + `jsonwebtoken` · PostgreSQL 16 · React 18 + Vite + React Router + Axios · React Native (Expo SDK 51) · C# WinForms (net9.0-windows)
 
 **Spec:** `docs/superpowers/specs/2026-09-01-summer2026-stages-design.md`
 
@@ -2097,16 +2097,25 @@ git commit -m "Proje 1: müşteri sipariş takip ekranı"
   - `static Task<JsonElement> PutAsync(string yol, object govde)`
   - Hata durumunda `ApiException` fırlatır; `ApiException.Message` API'nin döndürdüğü Türkçe `message` alanıdır.
 
-- [ ] **Adım 1: NuGet paketlerini `.csproj`'a ekle**
+- [ ] **Adım 1: NuGet paketlerini ekle (Windows'ta)**
 
-```xml
-<ItemGroup>
-  <PackageReference Include="ZXing.Net" Version="0.16.9" />
-  <PackageReference Include="ZXing.Net.Bindings.Windows.Compatibility" Version="0.16.12" />
-</ItemGroup>
+Sürüm numarası elle yazılmaz; NuGet en güncel uyumlu sürümü seçsin:
+
+```powershell
+cd 01-camasirhane-erp/apps/desktop-winforms/CamasirhaneKasa
+dotnet add package ZXing.Net
+dotnet add package ZXing.Windows.Compatibility
 ```
 
-`System.Net.Http.Json` ve `System.Text.Json` .NET 8'de yerleşiktir, paket gerekmez.
+`.csproj` içine eklenen `PackageReference` satırları commit edilir.
+
+**Doğrulama:** `dotnet build` hatasız geçmeli. `ZXing.Windows.Compatibility` paketi
+bulunamazsa alternatifi denenir: `dotnet add package ZXing.Net.Bindings.Windows.Compatibility`
+(ikisi de `System.Drawing.Bitmap` üreten `BarcodeWriter` sınıfını sağlar; hangisi
+kuruluysa Görev 16'daki `using` satırı ona göre yazılır — sırasıyla
+`using ZXing.Windows.Compatibility;` veya `using ZXing.Rendering;`).
+
+`System.Net.Http.Json` ve `System.Text.Json` .NET 9'da yerleşiktir, paket gerekmez.
 
 - [ ] **Adım 2: `ApiClient.cs` yaz**
 

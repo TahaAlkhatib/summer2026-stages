@@ -129,6 +129,8 @@ Bu Mac: macOS 13.7.8, **Intel (x86_64)**.
 macOS'ta WinForms projesi **oluşturulamaz ve derlenemez** (Windows Desktop SDK yok).
 ASP.NET Core tarafı Mac'te sorunsuz çalışıyor, oraya gerek yok.
 
+**Hedef framework:** `net9.0-windows` (Windows makinesindeki SDK: 9.0.313)
+
 **Windows'ta oluşturulacak 3 uygulama:**
 
 | Proje | Uygulama | Klasör |
@@ -139,7 +141,7 @@ ASP.NET Core tarafı Mac'te sorunsuz çalışıyor, oraya gerek yok.
 
 **Süreç (tek seferlik):**
 1. Depoyu Windows makinesine klonla.
-2. `.NET 8 SDK` kurulu olduğundan emin ol.
+2. `.NET 8+` SDK kurulu olduğundan emin ol (mevcut: 9.0.313 ✅).
 3. PowerShell'de: `./tools/scaffold-winforms.ps1`
 4. `git add . && git commit -m "WinForms iskeletleri" && git push`
 5. Mac'te `git pull` — C# kodu buradan yazılır, Windows'ta derlenip çalıştırılır.
@@ -288,7 +290,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-01 | .NET SDK 8 bu Mac'e kurulacak; sadece 3 WinForms uygulaması Windows'a devredilecek. |
 | 2026-09-01 | Veritabanları yerel kurulum (SQL Server hariç — Docker). |
 | 2026-09-01 | Redis kaldırıldı (öğrenci seviyesi için fazla ileri). |
-| 2026-09-01 | WPF kullanılmayacak; masaüstü .NET uygulamaları WinForms. |
+| 2026-09-01 | WPF kullanılmayacak; masaüstü .NET uygulamaları WinForms (`net9.0-windows`). |
 | 2026-09-01 | Kod seviyesi: "junior-but-clean". Kod İngilizce, arayüz Türkçe. |
 | 2026-09-01 | Tek depo, 8 alt klasör. |
 
@@ -300,3 +302,4 @@ Her proje için bitiş tanımı (Definition of Done):
 |-------|------------|
 | 2026-09-01 | Plan oluşturuldu. Tasarım dokümanı ve Windows devir paketi hazırlandı. Faz 0 kurulumu başlamadı. |
 | 2026-09-01 | Proje 1 için 18 görevlik uygulama planı yazıldı. |
+| 2026-09-01 | WinForms hedefi `net9.0-windows` olarak belirlendi (Windows makinesinde SDK 9.0.313). |

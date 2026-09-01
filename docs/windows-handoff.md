@@ -18,12 +18,16 @@ bulunur. Bu yüzden 3 masaüstü uygulamasının iskeleti bir kez Windows makine
 
 ## Adımlar
 
-### 1. Windows makinesine .NET 8 SDK kur
-https://dotnet.microsoft.com/download/dotnet/8.0 — "SDK" indir, kur.
-Kontrol:
+### 1. .NET SDK kontrolü
+Windows makinesinde **.NET 8 veya üzeri SDK** yeterlidir.
 ```powershell
-dotnet --list-sdks     # 8.x satırı görünmeli
+dotnet --list-sdks
 ```
+Bu makinede kurulu sürüm: **9.0.313** — uygundur, ek kuruluma gerek yok.
+Betik kurulu en yüksek sürümü otomatik seçer ve projeleri `net9.0-windows`
+hedefiyle oluşturur; böylece ayrıca .NET 8 Desktop Runtime kurmaya gerek kalmaz.
+
+SDK yoksa: https://dotnet.microsoft.com/download
 
 ### 2. Depoyu klonla
 ```powershell
@@ -41,8 +45,9 @@ PowerShell betik çalıştırmayı engellerse, bu oturum için izin ver:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
-Betik her uygulama için: klasörü oluşturur, `dotnet new winforms` çalıştırır,
-bir `.sln` üretir ve derlemenin başarılı olduğunu doğrular.
+Betik her uygulama için: klasörü oluşturur, kurulu en yüksek .NET sürümünü hedef
+alarak `dotnet new winforms` çalıştırır, bir `.sln` üretir ve derlemenin başarılı
+olduğunu doğrular.
 
 ### 4. Geri gönder
 ```powershell
