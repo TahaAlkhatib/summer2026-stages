@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Faz 0 tamamlandı (Proje 1 için) — Proje 1 geliştirmesi başladı
+**Durum:** Proje 1 tamamlandı. Proje 2 (Oto Servis) geliştiriliyor.
 
 ---
 
@@ -15,8 +15,8 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 
 | # | Klasör | Proje | Öğrenci | Durum |
 |---|--------|-------|---------|-------|
-| 1 | `01-camasirhane-erp/` | Çamaşırhane & Kuru Temizleme ERP | _(atanacak)_ | 🟡 API bitti, istemciler sürüyor |
-| 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
+| 1 | `01-camasirhane-erp/` | Çamaşırhane & Kuru Temizleme ERP | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
+| 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | 🟡 Devam ediyor |
 | 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
 | 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ⬜ Başlamadı |
 | 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
@@ -198,7 +198,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 ## 7. Proje Detayları ve İlerleme
 
-### Proje 1 — Çamaşırhane & Kuru Temizleme ERP  🟡
+### Proje 1 — Çamaşırhane & Kuru Temizleme ERP  ✅
 `01-camasirhane-erp/` · **Uygulama planı:** `docs/superpowers/plans/2026-09-01-01-camasirhane-erp.md` (18 görev)
 
 **Ana akış:** Sipariş alma → aşama takibi (Teslim Alındı → Yıkamada → Ütüde → Hazır → Teslim Edildi)
@@ -344,5 +344,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | Yeni kural: her proje klasöründe `KURULUM.md` bulunacak (öğrenci bilgisayarında sıfırdan çalıştırma rehberi). |
 | 2026-09-02 | Proje 1: Görev 15-17 — WinForms kasa uygulamasının C# kodu yazıldı. **Windows'ta derlenip test edilmesi bekleniyor.** |
 | 2026-09-02 | Yeni kural: WinForms formları tasarımcıdan düzenlenebilir olacak (`Form.cs` + `Form.Designer.cs`). Proje 1'in 7 formu bu yapıya çevrildi. |
+| 2026-09-02 | **Proje 1 tamamlandı** — Görev 18: Türkçe README, 13 ekran görüntüsü, KURULUM.md. WinForms derlemesi Windows'ta yapılacak. |
+| 2026-09-02 | Proje 2 (Oto Servis) başladı. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
