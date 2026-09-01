@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Faz 0 — kurulum ve iskelet (henüz kod yazılmadı)
+**Durum:** Faz 0 tamamlandı (Proje 1 için) — Proje 1 geliştirmesi başladı
 
 ---
 
@@ -107,19 +107,31 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 
 ## 4. Geliştirme Ortamı (Faz 0)
 
-Bu Mac: macOS 13.7.8, **Intel (x86_64)**.
+Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
+
+> ⚠️ **Önemli ortam notu:** Homebrew artık macOS 13 için hazır paket (bottle) yayınlamıyor.
+> Bu yüzden her `brew install` **kaynaktan derleme** yapıyor ve çok uzun sürüyor
+> (PostgreSQL bağımlılık zinciriyle birlikte ~1 saat sürdü). Sonraki kurulumlarda
+> (Flutter, PHP, MySQL) bunu hesaba katın; **cask** paketleri bu sorundan etkilenmez
+> (hazır indirilirler), bu yüzden mümkünse cask tercih edilmeli.
+>
+> Kaynaktan derleme yapıldığı için Homebrew'un `initdb` adımı atlandı; veri dizini
+> elle oluşturuldu:
+> `initdb -E UTF-8 --locale=en_US.UTF-8 /usr/local/var/postgresql@16`
+> **Locale `C` bırakılmamalı** — `C` locale Türkçe karakterleri küçültmediği için
+> `ILIKE` ile "Şahin", "Öztürk" gibi aramalar sessizce boş sonuç döndürür.
 
 | Araç | Mevcut durum | Yapılacak | Kim için |
 |------|--------------|-----------|----------|
 | Node.js 22 + npm/pnpm | ✅ kurulu | — | 1,3,4,6,8 |
 | MongoDB 4.4 | ✅ kurulu | — | 6 |
 | Docker 20.10 | ✅ kurulu | SQL Server 2022 imajı çekilecek | 2,5 |
-| Android SDK + AVD (`Pixel_4_API_33`) | ✅ kurulu | `adb` PATH'e eklenecek | tüm mobil |
+| Android SDK + AVD (`Pixel_4_API_33`) | ✅ kurulu | ✅ `adb` PATH'e eklendi | tüm mobil |
 | Xcode | ✅ kurulu | (kullanılmayacak — Android hedefli) | — |
 | .NET SDK | ⚠️ 5.0.407 (EOL) | `brew install --cask dotnet-sdk` (.NET 8) | 2,5 + WinForms |
 | Flutter / Dart | ❌ yok | `brew install --cask flutter` + `flutter doctor --android-licenses` | 2,3,5,7 |
 | PHP + Composer | ❌ yok | `brew install php composer` | 7 |
-| PostgreSQL | ❌ yok | `brew install postgresql@16` | 1,3,7,8 |
+| PostgreSQL | ✅ 16.15 kurulu ve çalışıyor | — | 1,3,7,8 |
 | MySQL | ❌ yok | `brew install mysql` | 4 |
 
 ---
@@ -146,7 +158,10 @@ ASP.NET Core tarafı Mac'te sorunsuz çalışıyor, oraya gerek yok.
 4. `git add . && git commit -m "WinForms iskeletleri" && git push`
 5. Mac'te `git pull` — C# kodu buradan yazılır, Windows'ta derlenip çalıştırılır.
 
-**Durum:** ✅ Betik hazır (`tools/scaffold-winforms.ps1`, ayrıntı: `docs/windows-handoff.md`) → ⬜ Windows'a gönderilmedi → ⬜ Geri senkronize edilmedi
+**Durum:** ✅ Betik hazır → ✅ Windows'ta çalıştırıldı → ✅ Geri senkronize edildi (commit `81d148d`)
+
+Üç iskelet de `net9.0-windows` hedefiyle geldi ve doğrulandı. Windows devri **tamamlandı**;
+bundan sonra C# kodu Mac'te yazılır, derleme/çalıştırma Windows'ta yapılır.
 
 ---
 
@@ -175,7 +190,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
 | `apps/api` | Express + PostgreSQL | ⬜ |
-| `apps/desktop-winforms` | WinForms (.NET 8) — kasa, etiket | ⬜ Windows bekliyor |
+| `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | ⬜ İskelet hazır, kod yazılacak |
 | `apps/web-admin` | React + Vite | ⬜ |
 | `apps/mobile` | React Native (Expo) — kurye + müşteri | ⬜ |
 
@@ -219,7 +234,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
 | `apps/api` | Express + MySQL | ⬜ |
-| `apps/desktop-winforms` | WinForms (.NET 8) — kasa + turnike paneli | ⬜ Windows bekliyor |
+| `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa + turnike paneli | ⬜ İskelet hazır, kod yazılacak |
 | `apps/web-admin` | React + Vite | ⬜ |
 | `apps/mobile` | React Native (Expo) | ⬜ |
 
@@ -234,7 +249,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
 | `apps/api` | ASP.NET Core 8 + SQL Server | ⬜ |
-| `apps/desktop-winforms` | WinForms (.NET 8) — merkez depo | ⬜ Windows bekliyor |
+| `apps/desktop-winforms` | WinForms (net9.0-windows) — merkez depo | ⬜ İskelet hazır, kod yazılacak |
 | `apps/mobile` | Flutter + SQLite (offline-first) + GPS | ⬜ |
 
 ---
@@ -303,3 +318,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-01 | Plan oluşturuldu. Tasarım dokümanı ve Windows devir paketi hazırlandı. Faz 0 kurulumu başlamadı. |
 | 2026-09-01 | Proje 1 için 18 görevlik uygulama planı yazıldı. |
 | 2026-09-01 | WinForms hedefi `net9.0-windows` olarak belirlendi (Windows makinesinde SDK 9.0.313). |
+| 2026-09-01 | Windows devri tamamlandı: 3 WinForms iskeleti üretilip senkronize edildi (`81d148d`). |
+| 2026-09-01 | `.csproj` dosyalarında `Nullable` kapatıldı (junior seviyesi kodda uyarı yığılmasını önlemek için). |
+| 2026-09-01 | Faz 0: `adb` ve `ANDROID_HOME` PATH'e eklendi. |
+| 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
