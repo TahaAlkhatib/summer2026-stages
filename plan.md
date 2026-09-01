@@ -191,7 +191,7 @@ Her proje için bitiş tanımı (Definition of Done):
 |----------|-----------|-------|
 | `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
 | `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | ⬜ İskelet hazır, kod yazılacak |
-| `apps/web-admin` | React + Vite | ⬜ |
+| `apps/web-admin` | React + Vite | ✅ Tamamlandı |
 | `apps/mobile` | React Native (Expo) — kurye + müşteri | ⬜ |
 
 ---
@@ -235,7 +235,7 @@ Her proje için bitiş tanımı (Definition of Done):
 |----------|-----------|-------|
 | `apps/api` | Express + MySQL | ⬜ |
 | `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa + turnike paneli | ⬜ İskelet hazır, kod yazılacak |
-| `apps/web-admin` | React + Vite | ⬜ |
+| `apps/web-admin` | React + Vite | ✅ Tamamlandı |
 | `apps/mobile` | React Native (Expo) | ⬜ |
 
 ---
@@ -322,4 +322,6 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-01 | `.csproj` dosyalarında `Nullable` kapatıldı (junior seviyesi kodda uyarı yığılmasını önlemek için). |
 | 2026-09-01 | Faz 0: `adb` ve `ANDROID_HOME` PATH'e eklendi. |
 | 2026-09-02 | Proje 1: Görev 1-8 tamamlandı — veritabanı şeması, demo verisi ve tüm API uçları çalışıyor. |
+| 2026-09-02 | Proje 1: Görev 9-11 tamamlandı — React yönetim paneli (7 sayfa) çalışıyor. |
+| 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

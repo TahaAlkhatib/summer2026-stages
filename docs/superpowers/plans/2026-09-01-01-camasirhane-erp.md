@@ -12,6 +12,12 @@
 
 ## Global Constraints
 
+> ⚠️ **Tarih tuzağı:** Varsayılan tarih üretirken **`new Date().toISOString().slice(0,10)` kullanmayın.**
+> Bu UTC tarihini döndürür; Türkiye UTC+3 olduğu için gece yarısı ile 03:00 arasında
+> bir önceki günü verir — yani gün sonu kasa raporu kapanış saatlerinde yanlış günü gösterir.
+> İstemcide yerel gün/ay/yıl bileşenlerinden üreten `yerelTarih()` yardımcısını,
+> sunucuda `CURRENT_DATE`'i kullanın.
+
 > ℹ️ **`curl` ile Türkçe karakterli sorgu:** Node'un HTTP ayrıştırıcısı istek satırında
 > çıplak UTF-8 bayt kabul etmez ve `400 Bad Request` döner. Doğrulama komutlarında
 > `?q=Şahin` yerine `-G --data-urlencode "q=Şahin"` kullanılmalıdır. Tarayıcı ve axios
@@ -1549,7 +1555,7 @@ git commit -m "Proje 1: ödemeler ve kurye görevleri"
 | GET | `/api/reports/daily?date=YYYY-MM-DD` | admin, kasiyer | `{date, order_count, total_amount, collected:{nakit, kart, havale, toplam}, delivered_count, orders:[{order_no, customer_name, total_amount, paid_amount, status}]}` |
 | GET | `/api/reports/summary` | tümü | `{status_counts:{alindi, yikamada, utude, hazir, teslim_edildi}, today:{order_count, total_amount}, month:{order_count, total_amount}, pending_courier_tasks, unpaid_total, top_services:[{name, order_count, revenue}]}` |
 
-`date` verilmezse bugün kullanılır. Gün sonu kasa raporu WinForms uygulamasının ana ekranından basılır.
+`date` verilmezse veritabanının `CURRENT_DATE` değeri kullanılır (UTC değil, yerel gün). Gün sonu kasa raporu WinForms uygulamasının ana ekranından basılır.
 
 - [ ] **Adım 1: `routes/reports.js` yaz**
 
@@ -1567,8 +1573,16 @@ router.get("/daily", async (req, res) => {
     return res.status(403).json({ message: "Bu işlem için yetkiniz yok." });
   }
 
-  const tarih = req.query.date || new Date().toISOString().slice(0, 10);
   try {
+    // Tarih verilmediyse veritabanının yerel gününü kullan.
+    // new Date().toISOString() UTC döndürür; Türkiye UTC+3 olduğu için gece
+    // 00:00-03:00 arasında bir önceki günün raporunu getirir.
+    const cozulen = await pool.query(
+      "SELECT TO_CHAR(COALESCE($1::date, CURRENT_DATE), 'YYYY-MM-DD') AS tarih",
+      [req.query.date || null]
+    );
+    const tarih = cozulen.rows[0].tarih;
+
     const siparisler = await pool.query(
       `SELECT o.order_no, o.total_amount, o.paid_amount, o.status, c.full_name AS customer_name
        FROM orders o JOIN customers c ON c.id = o.customer_id

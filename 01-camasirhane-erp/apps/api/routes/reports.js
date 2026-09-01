@@ -11,8 +11,16 @@ router.get("/daily", async (req, res) => {
     return res.status(403).json({ message: "Bu işlem için yetkiniz yok." });
   }
 
-  const tarih = req.query.date || new Date().toISOString().slice(0, 10);
   try {
+    // Tarih verilmediyse veritabaninin yerel gununu kullaniyoruz.
+    // new Date().toISOString() UTC dondurdugu icin gece 00:00-03:00 arasinda
+    // bir onceki gunun raporunu getiriyordu (Turkiye UTC+3).
+    const cozulen = await pool.query(
+      "SELECT TO_CHAR(COALESCE($1::date, CURRENT_DATE), 'YYYY-MM-DD') AS tarih",
+      [req.query.date || null]
+    );
+    const tarih = cozulen.rows[0].tarih;
+
     const siparisler = await pool.query(
       `SELECT o.order_no, o.total_amount, o.paid_amount, o.status, c.full_name AS customer_name
        FROM orders o JOIN customers c ON c.id = o.customer_id
