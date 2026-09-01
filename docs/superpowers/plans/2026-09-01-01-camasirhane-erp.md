@@ -12,6 +12,11 @@
 
 ## Global Constraints
 
+> ℹ️ **`curl` ile Türkçe karakterli sorgu:** Node'un HTTP ayrıştırıcısı istek satırında
+> çıplak UTF-8 bayt kabul etmez ve `400 Bad Request` döner. Doğrulama komutlarında
+> `?q=Şahin` yerine `-G --data-urlencode "q=Şahin"` kullanılmalıdır. Tarayıcı ve axios
+> zaten otomatik olarak yüzde-kodlama yaptığı için uygulamalarda bu sorun yaşanmaz.
+
 Bu bölüm her görev için geçerlidir; ayrıca tekrar edilmez.
 
 - **Arayüzdeki her metin Türkçe.** Hata mesajları dahil. Kod tanımlayıcıları (değişken, fonksiyon, tablo, sütun, API yolu) İngilizce.
@@ -24,6 +29,11 @@ Bu bölüm her görev için geçerlidir; ayrıca tekrar edilmez.
 - **Para birimi ₺**, tarih formatı `GG.AA.YYYY`, telefonlar `+90 5xx xxx xx xx`.
 - Her uygulamada `.env.example` bulunur, `.env` commit edilmez.
 - Her görev sonunda **commit** atılır. Commit mesajları Türkçe.
+
+> ⚠️ **PostgreSQL parametre tuzağı:** Aynı `$n` parametresini hem bir kolona yazarken
+> (`varchar`) hem de `CASE WHEN $n = '...'` içinde (`text`) kullanmayın —
+> PostgreSQL `inconsistent types deduced for parameter` hatası verir. Değeri JS
+> tarafında hesaplayıp ayrı bir parametre olarak gönderin.
 
 ## Sipariş Durumları (tüm uygulamalarda aynı)
 
@@ -703,7 +713,7 @@ git commit -m "Proje 1: Türkçe demo verisi"
 
 | Metot | Yol | Rol | Gövde / Sorgu | Yanıt |
 |-------|-----|-----|---------------|-------|
-| GET | `/api/customers?q=` | tümü | `q`: ad veya telefon içinde arama | `[{id, full_name, phone, address, district, city, notes, order_count}]` |
+| GET | `/api/customers?q=` | tümü | `q`: ad, telefon **veya ilçe** içinde arama | `[{id, full_name, phone, address, district, city, notes, order_count}]` |
 | GET | `/api/customers/:id` | tümü | — | müşteri nesnesi + `orders: [{id, order_no, status, total_amount, created_at}]` |
 | POST | `/api/customers` | admin, kasiyer | `{full_name, phone, address, district, notes}` | `201` oluşturulan müşteri |
 | PUT | `/api/customers/:id` | admin, kasiyer | aynı alanlar | güncellenen müşteri |
@@ -830,11 +840,11 @@ TOKEN=$(curl -s -X POST http://localhost:3101/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"123456"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
 
-curl -s "http://localhost:3101/api/customers?q=Kadıköy" -H "Authorization: Bearer $TOKEN" | head -c 300
+curl -s -G "http://localhost:3101/api/customers" --data-urlencode "q=Kadıköy" -H "Authorization: Bearer $TOKEN" | head -c 300
 curl -s "http://localhost:3101/api/services?active=1" -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json;print(len(json.load(sys.stdin)),'hizmet')"
 curl -s http://localhost:3101/api/customers
 ```
-Beklenen: ilk iki komut veri döner (`8 hizmet`); token'sız son komut `{"message":"Oturum geçersiz, lütfen tekrar giriş yapın."}`.
+Beklenen: ilk komut 3 müşteri (Kadıköy), ikincisi `8 hizmet`; token'sız son komut `{"message":"Oturum geçersiz, lütfen tekrar giriş yapın."}`.
 
 - [ ] **Adım 5: Commit**
 
@@ -1139,11 +1149,14 @@ router.put("/:id/status", async (req, res) => {
       return res.status(400).json({ message: "Teslim edilmiş sipariş güncellenemez." });
     }
 
+    // delivered_at'i JS tarafinda hesapliyoruz; ayni parametreyi hem kolonda hem
+    // CASE icinde kullanmak PostgreSQL'de tip cakismasina yol aciyor
+    const teslimTarihi = status === "teslim_edildi" ? new Date() : null;
+
     const result = await pool.query(
-      `UPDATE orders SET status = $1,
-              delivered_at = CASE WHEN $1 = 'teslim_edildi' THEN NOW() ELSE delivered_at END
-       WHERE id = $2 RETURNING id, order_no, status`,
-      [status, req.params.id]
+      `UPDATE orders SET status = $1, delivered_at = COALESCE($2, delivered_at)
+       WHERE id = $3 RETURNING id, order_no, status`,
+      [status, teslimTarihi, req.params.id]
     );
     await pool.query(
       "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES ($1, $2, $3, $4)",
@@ -1196,11 +1209,12 @@ router.put("/barcode/:barcode/status", async (req, res) => {
       return res.status(400).json({ message: "Teslim edilmiş sipariş güncellenemez." });
     }
 
+    const teslimTarihi = status === "teslim_edildi" ? new Date() : null;
+
     const result = await pool.query(
-      `UPDATE orders SET status = $1,
-              delivered_at = CASE WHEN $1 = 'teslim_edildi' THEN NOW() ELSE delivered_at END
-       WHERE id = $2 RETURNING id, order_no, status`,
-      [status, orderId]
+      `UPDATE orders SET status = $1, delivered_at = COALESCE($2, delivered_at)
+       WHERE id = $3 RETURNING id, order_no, status`,
+      [status, teslimTarihi, orderId]
     );
     await pool.query(
       "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES ($1, $2, $3, 'Barkod okutularak güncellendi')",

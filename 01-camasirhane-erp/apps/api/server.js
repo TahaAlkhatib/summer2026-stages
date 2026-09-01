@@ -13,6 +13,10 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", auth.router);
+app.use("/api/customers", require("./routes/customers"));
+app.use("/api/services", require("./routes/services"));
+app.use("/api/orders", require("./routes/orders"));
+app.use("/api/track", require("./routes/track"));
 
 const port = process.env.PORT || 3101;
 app.listen(port, () => {
