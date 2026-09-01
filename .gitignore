@@ -1,0 +1,34 @@
+# Node
+node_modules/
+dist/
+build/
+.next/
+.expo/
+*.log
+
+# .NET
+bin/
+obj/
+*.user
+
+# Flutter / Dart
+.dart_tool/
+.packages
+**/build/
+*.iml
+
+# PHP / Laravel
+vendor/
+storage/framework/cache/
+storage/logs/
+
+# Environment
+.env
+.env.local
+*.local
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
