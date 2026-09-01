@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -6,6 +6,13 @@
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>CamasirhaneKasa</AssemblyName>
+    <RootNamespace>CamasirhaneKasa</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Barkod cizimi icin (Code128). ZXing.Net bagimli olarak gelir. -->
+    <PackageReference Include="ZXing.Net.Bindings.Windows.Compatibility" Version="0.16.16" />
+  </ItemGroup>
 
 </Project>

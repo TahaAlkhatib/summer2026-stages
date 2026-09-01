@@ -2127,21 +2127,22 @@ git commit -m "Proje 1: müşteri sipariş takip ekranı"
 
 - [ ] **Adım 1: NuGet paketlerini ekle (Windows'ta)**
 
-Sürüm numarası elle yazılmaz; NuGet en güncel uyumlu sürümü seçsin:
+NuGet üzerinde doğrulanmış paket (2026-09 itibarıyla):
 
-```powershell
-cd 01-camasirhane-erp/apps/desktop-winforms/CamasirhaneKasa
-dotnet add package ZXing.Net
-dotnet add package ZXing.Windows.Compatibility
+```xml
+<ItemGroup>
+  <PackageReference Include="ZXing.Net.Bindings.Windows.Compatibility" Version="0.16.16" />
+</ItemGroup>
 ```
 
-`.csproj` içine eklenen `PackageReference` satırları commit edilir.
-
-**Doğrulama:** `dotnet build` hatasız geçmeli. `ZXing.Windows.Compatibility` paketi
-bulunamazsa alternatifi denenir: `dotnet add package ZXing.Net.Bindings.Windows.Compatibility`
-(ikisi de `System.Drawing.Bitmap` üreten `BarcodeWriter` sınıfını sağlar; hangisi
-kuruluysa Görev 16'daki `using` satırı ona göre yazılır — sırasıyla
-`using ZXing.Windows.Compatibility;` veya `using ZXing.Rendering;`).
+- Paket **adı** `ZXing.Net.Bindings.Windows.Compatibility`'dir.
+  `ZXing.Windows.Compatibility` diye bir NuGet paketi **yoktur** (yalnızca ad alanı
+  bu isimdedir).
+- `ZXing.Net` (0.16.11) bağımlı olarak kendiliğinden gelir, ayrıca eklenmez.
+- Paketin `net9.0` hedefi vardır, `net9.0-windows` ile uyumludur.
+- Kullanılacak sınıf: `ZXing.Windows.Compatibility.BarcodeWriter` (tam nitelikli yazılır).
+- `ZXing.Common.EncodingOptions` üzerinde `Width`, `Height`, `Margin`, `PureBarcode`
+  özellikleri mevcuttur.
 
 `System.Net.Http.Json` ve `System.Text.Json` .NET 9'da yerleşiktir, paket gerekmez.
 

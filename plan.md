@@ -198,7 +198,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
 | `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
-| `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | ⬜ İskelet hazır, kod yazılacak |
+| `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | 🔵 Kod yazıldı, Windows'ta derlenecek |
 | `apps/web-admin` | React + Vite | ✅ Tamamlandı |
 | `apps/mobile` | React Native (Expo) — kurye + müşteri | ✅ Tamamlandı |
 
@@ -333,5 +333,6 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | Proje 1: Görev 9-11 tamamlandı — React yönetim paneli (7 sayfa) çalışıyor. |
 | 2026-09-02 | Proje 1: Görev 12-14 tamamlandı — mobil uygulama emülatörde uçtan uca test edildi (kurye teslimatı + tahsilat + müşteri takibi). |
 | 2026-09-02 | Yeni kural: her proje klasöründe `KURULUM.md` bulunacak (öğrenci bilgisayarında sıfırdan çalıştırma rehberi). |
+| 2026-09-02 | Proje 1: Görev 15-17 — WinForms kasa uygulamasının C# kodu yazıldı (9 dosya, ~1630 satır). **Windows'ta derlenip test edilmesi bekleniyor.** |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
