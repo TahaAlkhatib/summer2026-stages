@@ -131,6 +131,18 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 > (Flutter, PHP, MySQL) bunu hesaba katın; **cask** paketleri bu sorundan etkilenmez
 > (hazır indirilirler), bu yüzden mümkünse cask tercih edilmeli.
 >
+> ⚠️ **Flutter sürümü sabitlenmiştir: 3.24.5.** Güncel Flutter sürümleri (3.29+)
+> **macOS 14 veya üzeri** gerektiriyor; bu makine macOS 13.7.8 olduğu için Dart VM
+> hiç başlamıyor (`Current Mac OS X version 13.0 is lower than minimum supported
+> version 14.0`). Bu yüzden `~/flutter` deposu **3.24.5** etiketine sabitlendi.
+> `flutter upgrade` **çalıştırmayın** — çalıştırılırsa Flutter tamamen bozulur.
+> Proje 3, 5 ve 7 de bu sürümü kullanacak.
+>
+> ⚠️ **.NET SDK**, `dotnet-install.sh` betiğiyle `~/.dotnet` altına **yönetici şifresi
+> gerektirmeden** kuruldu (brew cask'i sudo istiyor). PATH ayarı `~/.zshrc` içinde.
+> EF Core paketleri **9.0.19** sürümüne sabitlendi; `dotnet add package` varsayılan
+> olarak .NET 10 gerektiren 10.x sürümlerini çekiyor.
+>
 > Kaynaktan derleme yapıldığı için Homebrew'un `initdb` adımı atlandı; veri dizini
 > elle oluşturuldu:
 > `initdb -E UTF-8 --locale=en_US.UTF-8 /usr/local/var/postgresql@16`
@@ -144,8 +156,8 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 | Docker 20.10 | ✅ kurulu | SQL Server 2022 imajı çekilecek | 2,5 |
 | Android SDK + AVD (`Pixel_4_API_33`) | ✅ kurulu | ✅ `adb` PATH'e eklendi | tüm mobil |
 | Xcode | ✅ kurulu | (kullanılmayacak — Android hedefli) | — |
-| .NET SDK | ⚠️ 5.0.407 (EOL) | `brew install --cask dotnet-sdk` (.NET 8) | 2,5 + WinForms |
-| Flutter / Dart | ❌ yok | `brew install --cask flutter` + `flutter doctor --android-licenses` | 2,3,5,7 |
+| .NET SDK | ✅ **9.0.317** — `~/.dotnet` (sudo'suz kuruldu) | — | 2,5 + WinForms |
+| Flutter / Dart | ✅ **3.24.5** (Dart 3.5.4) — `~/flutter` | ⚠️ sürüm sabitlendi, aşağıdaki nota bakın | 2,3,5,7 |
 | PHP + Composer | ❌ yok | `brew install php composer` | 7 |
 | PostgreSQL | ✅ 16.15 kurulu ve çalışıyor | — | 1,3,7,8 |
 | MySQL | ❌ yok | `brew install mysql` | 4 |
@@ -346,5 +358,8 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | Yeni kural: WinForms formları tasarımcıdan düzenlenebilir olacak (`Form.cs` + `Form.Designer.cs`). Proje 1'in 7 formu bu yapıya çevrildi. |
 | 2026-09-02 | **Proje 1 tamamlandı** — Görev 18: Türkçe README, 13 ekran görüntüsü, KURULUM.md. WinForms derlemesi Windows'ta yapılacak. |
 | 2026-09-02 | Proje 2 (Oto Servis) başladı. |
+| 2026-09-02 | .NET 9.0.317 sudo'suz kuruldu; EF Core 9.0.19'a sabitlendi. SQL Server 2022 Docker'da çalışıyor. |
+| 2026-09-02 | **Flutter 3.24.5'e sabitlendi** — güncel sürümler macOS 14+ istiyor, bu makine macOS 13. `flutter upgrade` yapılmamalı. |
+| 2026-09-02 | Proje 2: API (ASP.NET Core) ve Next.js paneli tamamlandı, Flutter tablet uygulaması yazıldı. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
