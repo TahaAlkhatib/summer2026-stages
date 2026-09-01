@@ -143,6 +143,18 @@ String paraFormat(dynamic tutar) {
   return '${parcalar.reversed.join('.')},$kurus ₺';
 }
 
+// 18700 -> "18.700"
+String sayiFormat(dynamic deger) {
+  final sayi = (deger is num) ? deger.toInt() : int.tryParse('$deger') ?? 0;
+  final basamaklar = sayi.toString().split('').reversed.toList();
+  final parcalar = <String>[];
+  for (var i = 0; i < basamaklar.length; i += 3) {
+    final son = (i + 3 < basamaklar.length) ? i + 3 : basamaklar.length;
+    parcalar.add(basamaklar.sublist(i, son).reversed.join());
+  }
+  return parcalar.reversed.join('.');
+}
+
 String tarihFormat(String? iso) {
   if (iso == null) return '-';
   final d = DateTime.tryParse(iso);

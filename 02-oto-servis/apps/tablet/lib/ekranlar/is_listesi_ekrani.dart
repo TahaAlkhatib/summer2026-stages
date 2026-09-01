@@ -88,7 +88,10 @@ class _IsListesiEkraniDurumu extends State<IsListesiEkrani> {
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
+            // Dar ekranlarda sekmeler tasmasin diye yatay kaydirilabilir
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
               children: _sekmeler.map((s) {
                 final secili = _durumFiltresi == s['kod'];
                 return Padding(
@@ -108,6 +111,7 @@ class _IsListesiEkraniDurumu extends State<IsListesiEkrani> {
                   ),
                 );
               }).toList(),
+              ),
             ),
           ),
 

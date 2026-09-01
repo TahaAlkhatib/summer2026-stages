@@ -92,6 +92,30 @@ Açıldı ──▶ İncelemede ──▶ Onay Bekliyor ──▶ Tamirde ──
 
 ---
 
+## Ekran Görüntüleri
+
+### Yönetim Paneli (Next.js)
+
+| Panel | İş Emirleri |
+|-------|-------------|
+| ![Panel](docs/ekranlar/web-02-panel.png) | ![İş Emirleri](docs/ekranlar/web-03-is-emirleri.png) |
+
+| İş Emri Detayı | Yeni İş Emri |
+|----------------|--------------|
+| ![Detay](docs/ekranlar/web-04-is-emri-detay.png) | ![Yeni](docs/ekranlar/web-05-yeni-is-emri.png) |
+
+| Yedek Parça | Servis Faturası |
+|-------------|-----------------|
+| ![Parça](docs/ekranlar/web-06-parcalar.png) | ![Fatura](docs/ekranlar/web-08-fatura.png) |
+
+### Tablet Uygulaması (Flutter)
+
+| Giriş | İş Emirleri | İş Emri Detayı |
+|-------|-------------|----------------|
+| ![Giriş](docs/ekranlar/tablet-giris.png) | ![Liste](docs/ekranlar/tablet-is-listesi.png) | ![Detay](docs/ekranlar/tablet-is-detay.png) |
+
+---
+
 ## Demo Hesapları
 
 | Kullanıcı Adı | Şifre | Rol |

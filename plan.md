@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Proje 1 tamamlandı. Proje 2 (Oto Servis) geliştiriliyor.
+**Durum:** Proje 1 ve 2 tamamlandı. Proje 3 (Klinik PMS) geliştiriliyor.
 
 ---
 
@@ -16,8 +16,8 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 | # | Klasör | Proje | Öğrenci | Durum |
 |---|--------|-------|---------|-------|
 | 1 | `01-camasirhane-erp/` | Çamaşırhane & Kuru Temizleme ERP | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
-| 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | 🟡 Devam ediyor |
-| 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
+| 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
+| 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | 🟡 Devam ediyor |
 | 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ⬜ Başlamadı |
 | 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
 | 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
@@ -225,7 +225,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 ---
 
-### Proje 2 — Oto Servis & Bakım Yönetimi  ⬜
+### Proje 2 — Oto Servis & Bakım Yönetimi  ✅
 `02-oto-servis/`
 
 **Ana akış:** Job Card açma → tablet ile arıza tespiti + fotoğraf → depodan parça çekme
@@ -233,9 +233,9 @@ Her proje için bitiş tanımı (Definition of Done):
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | ASP.NET Core 8 + SQL Server (EF Core) | ⬜ |
-| `apps/dashboard` | Next.js | ⬜ |
-| `apps/tablet` | Flutter | ⬜ |
+| `apps/api` | ASP.NET Core 9 + SQL Server (EF Core) | ✅ Tamamlandı |
+| `apps/dashboard` | Next.js 16 | ✅ Tamamlandı |
+| `apps/tablet` | Flutter 3.24.5 | ✅ Tamamlandı (emülatörde test edildi) |
 
 ---
 
@@ -361,5 +361,8 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | .NET 9.0.317 sudo'suz kuruldu; EF Core 9.0.19'a sabitlendi. SQL Server 2022 Docker'da çalışıyor. |
 | 2026-09-02 | **Flutter 3.24.5'e sabitlendi** — güncel sürümler macOS 14+ istiyor, bu makine macOS 13. `flutter upgrade` yapılmamalı. |
 | 2026-09-02 | Proje 2: API (ASP.NET Core) ve Next.js paneli tamamlandı, Flutter tablet uygulaması yazıldı. |
+| 2026-09-02 | **Proje 2 tamamlandı** — tablet uygulaması emülatörde test edildi, yatay taşma hatası düzeltildi. |
+| 2026-09-02 | Kullanılmayan servisler kapatılıyor (emülatör, SQL Server konteyneri) — makine yükünü azaltmak için. |
+| 2026-09-02 | Proje 3 (Klinik PMS) başladı: NestJS 12 + TypeORM 1.1 + PostgreSQL, `clinic_db` oluşturuldu. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

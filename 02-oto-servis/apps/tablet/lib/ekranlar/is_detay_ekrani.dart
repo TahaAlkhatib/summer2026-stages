@@ -331,7 +331,7 @@ class _IsDetayEkraniDurumu extends State<IsDetayEkrani> {
                       style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Text('Renk: ${arac['color'] ?? '-'}   ·   '
-                      'Kilometre: ${e['mileage'] ?? '-'} km',
+                      'Kilometre: ${sayiFormat(e['mileage'])} km',
                       style: const TextStyle(color: Color(0xFF7B8794))),
                   const Divider(height: 24),
                   Text('Müşteri: ${musteri['full_name'] ?? '-'}'),
