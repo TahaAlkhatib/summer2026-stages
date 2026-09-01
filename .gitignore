@@ -38,3 +38,6 @@ Thumbs.db
 !**/lib/**/*.dll
 wwwroot/uploads/*
 !wwwroot/uploads/.gitkeep
+AGENTS.md
+CLAUDE.md
+.next/
