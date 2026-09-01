@@ -51,7 +51,8 @@ export class Patient {
   @Column({ length: 10, nullable: true })
   gender: string;
 
-  @Column({ length: 5, nullable: true })
+  // "AB Rh+" 6 karakter olduğu için 5 yetmiyor
+  @Column({ length: 10, nullable: true })
   bloodType: string;
 
   @Column({ type: 'text', nullable: true })
