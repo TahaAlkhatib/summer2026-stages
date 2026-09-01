@@ -165,7 +165,7 @@ Her proje için bitiş tanımı (Definition of Done):
 ## 7. Proje Detayları ve İlerleme
 
 ### Proje 1 — Çamaşırhane & Kuru Temizleme ERP  ⬜
-`01-camasirhane-erp/`
+`01-camasirhane-erp/` · **Uygulama planı:** `docs/superpowers/plans/2026-09-01-01-camasirhane-erp.md` (18 görev)
 
 **Ana akış:** Sipariş alma → aşama takibi (Teslim Alındı → Yıkamada → Ütüde → Hazır → Teslim Edildi)
 → suya dayanıklı barkod etiket basımı → kurye atama → müşteri takibi → gün sonu kasa raporu.
@@ -299,3 +299,4 @@ Her proje için bitiş tanımı (Definition of Done):
 | Tarih | Değişiklik |
 |-------|------------|
 | 2026-09-01 | Plan oluşturuldu. Tasarım dokümanı ve Windows devir paketi hazırlandı. Faz 0 kurulumu başlamadı. |
+| 2026-09-01 | Proje 1 için 18 görevlik uygulama planı yazıldı. |
