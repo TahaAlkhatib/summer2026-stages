@@ -1,0 +1,18 @@
+# Oto Servis - SQL Server veritabanı
+# macOS için yerel SQL Server kurulumu olmadığından Docker kullanılıyor.
+# Başlatmak için:  docker compose up -d
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: otoservis-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "OtoServis2026!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - otoservis-data:/var/opt/mssql
+
+volumes:
+  otoservis-data:
