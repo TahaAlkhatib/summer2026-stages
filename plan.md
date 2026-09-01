@@ -77,6 +77,15 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 - `.env.example`
 - `README.md` (Türkçe): kurulum, çalıştırma, demo hesapları, ekran görüntüleri
 
+### WinForms uygulamalarında (Proje 1, 4, 5)
+- **Formlar Visual Studio tasarımcısıyla düzenlenebilir olmalı.** Yani her form
+  `Form.cs` + `Form.Designer.cs` ikilisi şeklinde yazılır; denetimler
+  `InitializeComponent()` içinde tanımlanır, kod tarafında elle `Controls.Add`
+  ile form kurulmaz. Öğrenciler formları tasarımcıdan düzenleyecek.
+- Parametre alan formlarda **parametresiz bir kurucu da bulunmalı**, aksi hâlde
+  tasarımcı formu açamaz.
+- `.csproj` içinde `<Nullable>disable</Nullable>` (junior seviyesi kodda uyarı yığılmasını önler).
+
 ### Her PROJE klasöründe (zorunlu)
 - **`KURULUM.md`** — projeyi sıfırdan bir bilgisayarda ayağa kaldırma rehberi.
   Öğrencinin bilgisayarına kopyalandığında tek başına yeterli olmalı:
@@ -333,6 +342,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | Proje 1: Görev 9-11 tamamlandı — React yönetim paneli (7 sayfa) çalışıyor. |
 | 2026-09-02 | Proje 1: Görev 12-14 tamamlandı — mobil uygulama emülatörde uçtan uca test edildi (kurye teslimatı + tahsilat + müşteri takibi). |
 | 2026-09-02 | Yeni kural: her proje klasöründe `KURULUM.md` bulunacak (öğrenci bilgisayarında sıfırdan çalıştırma rehberi). |
-| 2026-09-02 | Proje 1: Görev 15-17 — WinForms kasa uygulamasının C# kodu yazıldı (9 dosya, ~1630 satır). **Windows'ta derlenip test edilmesi bekleniyor.** |
+| 2026-09-02 | Proje 1: Görev 15-17 — WinForms kasa uygulamasının C# kodu yazıldı. **Windows'ta derlenip test edilmesi bekleniyor.** |
+| 2026-09-02 | Yeni kural: WinForms formları tasarımcıdan düzenlenebilir olacak (`Form.cs` + `Form.Designer.cs`). Proje 1'in 7 formu bu yapıya çevrildi. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
