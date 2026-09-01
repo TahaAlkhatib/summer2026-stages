@@ -2386,11 +2386,15 @@ git commit -m "Proje 1: barkod ile aşama güncelleme ve gün sonu kasa raporu"
 
 ---
 
-## Görev 18: Türkçe README, Ekran Görüntüleri ve Plan Güncellemesi
+## Görev 18: Türkçe README, KURULUM.md, Ekran Görüntüleri ve Plan Güncellemesi
 
 **Files:**
 - Create: `01-camasirhane-erp/README.md`
+- Create/Update: `01-camasirhane-erp/KURULUM.md` (sıfırdan kurulum rehberi — WinForms bölümü Görev 15-17 sonrası tamamlanır)
 - Create: `01-camasirhane-erp/docs/ekranlar/` (ekran görüntüleri)
+
+> **Not:** `KURULUM.md` her proje klasöründe zorunludur (`plan.md` §3). Öğrencinin
+> bilgisayarına kopyalandığında tek başına yeterli olmalıdır.
 - Modify: `plan.md`
 
 - [ ] **Adım 1: Ekran görüntülerini topla**

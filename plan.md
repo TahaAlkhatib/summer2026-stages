@@ -77,6 +77,13 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 - `.env.example`
 - `README.md` (Türkçe): kurulum, çalıştırma, demo hesapları, ekran görüntüleri
 
+### Her PROJE klasöründe (zorunlu)
+- **`KURULUM.md`** — projeyi sıfırdan bir bilgisayarda ayağa kaldırma rehberi.
+  Öğrencinin bilgisayarına kopyalandığında tek başına yeterli olmalı:
+  gerekli programlar ve sürümleri, veritabanı oluşturma, her uygulamanın
+  kurulum/çalıştırma komutları, çalıştırma sırası, demo hesapları ve
+  sık karşılaşılan sorunlar tablosu. **Proje bitmeden tamamlanmış sayılmaz.**
+
 ### Port dağılımı
 
 | Proje | API | Web | Diğer |
@@ -170,6 +177,7 @@ bundan sonra C# kodu Mac'te yazılır, derleme/çalıştırma Windows'ta yapıl�
 Projeler **sırayla ve tam bitirilerek** geliştirilir. Bir proje bitmeden diğerine geçilmez.
 
 Her proje için bitiş tanımı (Definition of Done):
+- [ ] **`KURULUM.md`** — sıfırdan kurulum ve çalıştırma rehberi (Türkçe)
 - [ ] Veritabanı şeması + Türkçe demo verisi
 - [ ] Backend API çalışıyor, tüm ana akışlar uçtan uca
 - [ ] Web / masaüstü istemci çalışıyor (Türkçe arayüz)
@@ -192,7 +200,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
 | `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | ⬜ İskelet hazır, kod yazılacak |
 | `apps/web-admin` | React + Vite | ✅ Tamamlandı |
-| `apps/mobile` | React Native (Expo) — kurye + müşteri | ⬜ |
+| `apps/mobile` | React Native (Expo) — kurye + müşteri | ✅ Tamamlandı |
 
 ---
 
@@ -323,5 +331,7 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-01 | Faz 0: `adb` ve `ANDROID_HOME` PATH'e eklendi. |
 | 2026-09-02 | Proje 1: Görev 1-8 tamamlandı — veritabanı şeması, demo verisi ve tüm API uçları çalışıyor. |
 | 2026-09-02 | Proje 1: Görev 9-11 tamamlandı — React yönetim paneli (7 sayfa) çalışıyor. |
+| 2026-09-02 | Proje 1: Görev 12-14 tamamlandı — mobil uygulama emülatörde uçtan uca test edildi (kurye teslimatı + tahsilat + müşteri takibi). |
+| 2026-09-02 | Yeni kural: her proje klasöründe `KURULUM.md` bulunacak (öğrenci bilgisayarında sıfırdan çalıştırma rehberi). |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
