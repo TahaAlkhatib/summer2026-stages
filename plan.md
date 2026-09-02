@@ -3,8 +3,8 @@
 > Bu dosya portföyün tek doğruluk kaynağıdır. Her oturumda önce bu dosya okunur,
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
-**Son güncelleme:** 2026-09-01
-**Durum:** Proje 1-7 tamamlandı. Proje 8 (Kargo & Dağıtım) sırada.
+**Son güncelleme:** 2026-09-02
+**Durum:** 8 projenin tamamı bitti. Kalan iş: WinForms uygulamalarının Windows makinede derlenip test edilmesi.
 
 ---
 
@@ -22,7 +22,7 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 | 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 7 | `07-emlak-crm/` | Emlak & Kiralama CRM | _(atanacak)_ | ✅ Tamamlandı |
-| 8 | `08-kargo-dagitim/` | Kargo & Son Kilometre Dağıtım | _(atanacak)_ | ⬜ Başlamadı |
+| 8 | `08-kargo-dagitim/` | Kargo & Son Kilometre Dağıtım | _(atanacak)_ | ✅ Tamamlandı |
 
 Durum kodları: ⬜ Başlamadı · 🟡 Devam ediyor · 🔵 Windows bekliyor · ✅ Tamamlandı
 
@@ -207,6 +207,23 @@ ASP.NET Core tarafı Mac'te sorunsuz çalışıyor, oraya gerek yok.
 Üç iskelet de `net9.0-windows` hedefiyle geldi ve doğrulandı. Windows devri **tamamlandı**;
 bundan sonra C# kodu Mac'te yazılır, derleme/çalıştırma Windows'ta yapılır.
 
+### ⚠️ Kalan tek iş: WinForms uygulamalarının Windows'ta derlenip test edilmesi
+
+Üç WinForms uygulamasının **C# kodu tamamen yazıldı** (hepsi tasarımcıda
+düzenlenebilir `Form.cs` + `Form.Designer.cs` ikilisi). Mac'te derlenemedikleri
+için henüz **çalıştırılıp test edilmediler.** Windows makinede yapılacaklar:
+
+```powershell
+git pull
+
+cd 01-camasirhane-erp\apps\desktop-winforms ; dotnet build ; dotnet run --project CamasirhaneKasa
+cd 04-spor-salonu\apps\desktop-winforms     ; dotnet build ; dotnet run --project SporSalonuKasa
+cd 05-arac-satis-depo\apps\desktop-winforms ; dotnet build ; dotnet run --project DepoYonetim
+```
+
+Her uygulamanın ilgili API'si çalışıyor olmalı (bkz. proje KURULUM.md dosyaları).
+Derleme hataları çıkarsa düzeltilip commit edilir.
+
 ---
 
 ## 6. Çalışma Sırası
@@ -375,7 +392,7 @@ girme (emülatörde uçtan uca).
 
 ---
 
-### Proje 8 — Kargo & Son Kilometre Dağıtım  ⬜
+### Proje 8 — Kargo & Son Kilometre Dağıtım  ✅
 `08-kargo-dagitim/`
 
 **Ana akış:** Gönderi girişi → toplu irsaliye/barkod basımı → şube ayrıştırma
@@ -383,10 +400,32 @@ girme (emülatörde uçtan uca).
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + PostgreSQL | ⬜ |
-| `apps/desktop` | Electron + React — giriş & irsaliye basımı | ⬜ |
-| `apps/web-merchant` | React + Vite (tacir portalı) | ⬜ |
-| `apps/mobile` | React Native (Expo) — sürücü | ⬜ |
+| `apps/api` | Express 5 + PostgreSQL (`courier_db`) | ✅ Tamamlandı |
+| `apps/desktop` | Electron 44 + React — kabul, ayrıştırma, irsaliye basımı | ✅ Tamamlandı |
+| `apps/web-merchant` | React + Vite (tacir portalı, :5108) | ✅ Tamamlandı |
+| `apps/mobile` | React Native (Expo SDK 57) — kurye | ✅ Tamamlandı (emülatörde test edildi) |
+
+**Projenin özü:**
+- **Barkod:** Code 39 barkodlar hazır kütüphane olmadan SVG olarak çiziliyor
+  (`apps/desktop/src/barkod.js`); kargo etiketleri ve irsaliyeler
+  `@media print` kurallarıyla topluca yazdırılabiliyor.
+- **Şube ayrıştırma:** `branches.districts` alanındaki ilçe listesine bakılarak
+  dağıtım şubesi otomatik belirleniyor; hizmet verilmeyen ilçe reddediliyor.
+- **OTP + imza:** gönderi kuryeye zimmetlenince 6 haneli kod üretiliyor
+  (gerçekte alıcıya SMS gider); teslimatta kod + teslim alan adı + parmakla
+  atılan imza (PanResponder → SVG) zorunlu. 3 başarısız denemede otomatik iade.
+- **COD:** teslimatla aynı transaction içinde tahsilat kaydı açılıyor;
+  tacir portalında komisyon düşülmüş net bakiye gösteriliyor.
+
+**Doğrulanan akışlar:** gönderi kaydı → otomatik şube ayrıştırma → hizmet
+dışı ilçe reddi → kurye irsaliyesi + OTP üretimi → yanlış kodla teslimat
+reddi → doğru kodla imzalı teslimat + 450 ₺ COD tahsilatı → hareket geçmişi
+(4 adım) → tacir portalında net bakiye. Masaüstü Electron penceresi açılıyor
+(macOS'ta pencere görüntüsü alınamıyor, arayüz Vite üzerinden doğrulandı).
+
+**Düzeltilen hata:** kurye raporunda `shipments` ve `cod_collections`
+tablolarının aynı anda JOIN edilmesi satırları çarpıyordu (bir kurye için
+12 "dağıtımda" görünüyordu); tahsilat alt sorguya alındı.
 
 ---
 
@@ -436,5 +475,6 @@ girme (emülatörde uçtan uca).
 | 2026-09-02 | Proje 5 tamamlandı: API + Flutter çevrimdışı mobil (emülatörde uçtan uca doğrulandı) + WinForms depo uygulaması + README/KURULUM + 13 ekran görüntüsü. |
 | 2026-09-02 | Proje 6 tamamlandı: Express+MongoDB API, Next.js sürükle-bırak oda takvimi, Expo görev uygulaması (emülatörde doğrulandı), README/KURULUM + 12 ekran görüntüsü. |
 | 2026-09-02 | Proje 7 tamamlandı: Laravel 13 + PostgreSQL API, Vue 3 yönetim paneli, Flutter danışman uygulaması, README/KURULUM + 16 ekran görüntüsü. |
+| 2026-09-02 | Proje 8 tamamlandı: Express+PostgreSQL API, Electron şube uygulaması (Code 39 barkod + irsaliye basımı), React tacir portalı, Expo kurye uygulaması (OTP + imza + COD). 8 projenin tamamı bitti. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

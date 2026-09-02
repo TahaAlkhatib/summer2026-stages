@@ -1,0 +1,162 @@
+/* Kargo Şube Operasyon — masaüstü arayüz stilleri */
+
+:root {
+  --lacivert: #16324f;
+  --lacivert-acik: #23507c;
+  --turuncu: #e2711d;
+  --turuncu-acik: #f08a3c;
+  --zemin: #f3f5f7;
+  --beyaz: #fff;
+  --metin: #1f2933;
+  --soluk: #6b7280;
+  --cizgi: #e2e6ea;
+  --yesil: #15803d;
+  --kirmizi: #b91c1c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--zemin);
+  color: var(--metin);
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+input, textarea, select { user-select: text; }
+
+.uygulama { display: flex; height: 100vh; }
+
+/* ---- Sol menü ---- */
+.kenar { width: 220px; background: var(--lacivert); color: #fff;
+  display: flex; flex-direction: column; flex-shrink: 0; }
+.kenar-baslik { padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.kenar-baslik h1 { margin: 0; font-size: 17px; }
+.kenar-baslik span { font-size: 12px; color: var(--turuncu-acik); }
+.kenar nav { flex: 1; padding: 10px 0; }
+.kenar nav button {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  color: #cfe0ee; padding: 11px 20px; font-size: 14px; cursor: pointer;
+  border-left: 4px solid transparent; font-family: inherit;
+}
+.kenar nav button:hover { background: rgba(255,255,255,0.06); }
+.kenar nav button.aktif {
+  background: rgba(255,255,255,0.1); border-left-color: var(--turuncu);
+  color: #fff; font-weight: 600;
+}
+.kenar-alt { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.12); }
+.kenar-alt .ad { font-weight: 600; }
+.kenar-alt .rol { font-size: 12px; color: #9fb6c9; margin-bottom: 10px; }
+
+.icerik { flex: 1; overflow-y: auto; padding: 22px; }
+
+/* ---- Başlık ---- */
+.sayfa-basligi { display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.sayfa-basligi h2 { margin: 0; color: var(--lacivert); font-size: 21px; }
+.sayfa-basligi p { margin: 2px 0 0; color: var(--soluk); font-size: 13px; }
+
+/* ---- Kart ---- */
+.kart { background: var(--beyaz); border-radius: 10px; padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 14px; }
+.kart h3 { margin: 0 0 12px; font-size: 15px; color: var(--lacivert); }
+.kartlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.ozet-kart { background: #fff; border-radius: 10px; padding: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.ozet-kart .etiket { font-size: 12px; color: var(--soluk); }
+.ozet-kart .deger { font-size: 22px; font-weight: bold; margin-top: 3px; }
+.ozet-kart .alt { font-size: 11px; color: var(--soluk); }
+
+/* ---- Tablo ---- */
+table { width: 100%; border-collapse: collapse; background: #fff; }
+thead th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--soluk);
+  padding: 9px 10px; background: #f7f9fa; border-bottom: 1px solid var(--cizgi); }
+tbody td { padding: 9px 10px; border-bottom: 1px solid var(--cizgi); }
+tbody tr:hover { background: #fafcfd; }
+.sag { text-align: right; white-space: nowrap; }
+.tablo-kutu { background: #fff; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+
+/* ---- Form ---- */
+label { display: block; font-size: 12px; color: var(--soluk); margin-bottom: 4px; }
+input, select, textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--cizgi);
+  border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--lacivert-acik); border-color: transparent; }
+.alan { margin-bottom: 11px; }
+.izgara { display: grid; gap: 11px; }
+.izgara-2 { grid-template-columns: repeat(2, 1fr); }
+.izgara-3 { grid-template-columns: repeat(3, 1fr); }
+.izgara-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ---- Düğme ---- */
+button { font-family: inherit; font-size: 14px; cursor: pointer; border: none;
+  border-radius: 8px; padding: 9px 15px; }
+.dugme { background: var(--lacivert); color: #fff; }
+.dugme:hover { background: var(--lacivert-acik); }
+.dugme-turuncu { background: var(--turuncu); color: #fff; }
+.dugme-turuncu:hover { background: var(--turuncu-acik); }
+.dugme-ikincil { background: #fff; color: var(--metin); border: 1px solid var(--cizgi); }
+.dugme-ikincil:hover { background: #f2f4f6; }
+button:disabled { opacity: 0.55; cursor: default; }
+.dugme-kucuk { padding: 5px 10px; font-size: 12px; }
+
+/* ---- Rozet ---- */
+.rozet { display: inline-block; padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; white-space: nowrap; }
+.rozet-yesil { background: #dcfce7; color: #15803d; }
+.rozet-mavi { background: #dbeafe; color: #1d4ed8; }
+.rozet-turuncu { background: #ffedd5; color: #c2410c; }
+.rozet-kirmizi { background: #fee2e2; color: #b91c1c; }
+.rozet-gri { background: #e5e7eb; color: #4b5563; }
+
+/* ---- Uyarı ---- */
+.uyari { padding: 11px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+.uyari-hata { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.uyari-basari { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
+.uyari-bilgi { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+.filtreler { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end; }
+.filtreler .alan { margin-bottom: 0; }
+.filtreler input, .filtreler select { min-width: 150px; }
+
+.bos { text-align: center; color: #9ca3af; padding: 28px; }
+.soluk { color: var(--soluk); }
+.kucuk { font-size: 12px; }
+
+/* ---- Giriş ekranı ---- */
+.giris-zemin { height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--lacivert); }
+.giris-kutu { background: #fff; border-radius: 14px; width: 400px; overflow: hidden; }
+.giris-ust { background: var(--lacivert-acik); color: #fff; padding: 24px; text-align: center; }
+.giris-ust h1 { margin: 0; font-size: 20px; }
+.giris-ust p { margin: 4px 0 0; font-size: 13px; color: #cfe0ee; }
+.giris-govde { padding: 22px; }
+
+/* ---- Barkod / irsaliye basımı ---- */
+.etiket-alani { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.kargo-etiketi {
+  border: 2px solid #000; border-radius: 4px; padding: 10px;
+  background: #fff; font-size: 12px; page-break-inside: avoid;
+}
+.kargo-etiketi .ust { display: flex; justify-content: space-between;
+  border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 6px; }
+.kargo-etiketi .barkod { text-align: center; margin: 8px 0 2px; }
+.kargo-etiketi .barkod svg { max-width: 100%; height: 46px; }
+.kargo-etiketi .barkod-metin { text-align: center; font-family: monospace;
+  letter-spacing: 2px; font-size: 13px; font-weight: bold; }
+.kargo-etiketi .satir { display: flex; gap: 6px; margin-top: 3px; }
+.kargo-etiketi .satir b { min-width: 62px; }
+.kargo-etiketi .kapida { background: #000; color: #fff; text-align: center;
+  padding: 3px; margin-top: 6px; font-weight: bold; }
+
+@media print {
+  .kenar, .yazdirma-gizle { display: none !important; }
+  body { background: #fff; }
+  .icerik { padding: 0; overflow: visible; }
+  .kart { box-shadow: none; padding: 0; }
+  .etiket-alani { grid-template-columns: repeat(2, 1fr); }
+}
