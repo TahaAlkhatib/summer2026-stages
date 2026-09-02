@@ -1,0 +1,18 @@
+# Araç Üstü Satış & Depo - SQL Server veritabanı
+# macOS için yerel SQL Server kurulumu olmadığından Docker kullanılıyor.
+# Proje 2 ile aynı anda çalışabilmesi için 1434 portu kullanılır.
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: vansales-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "VanSales2026!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1434:1433"
+    volumes:
+      - vansales-data:/var/opt/mssql
+
+volumes:
+  vansales-data:
