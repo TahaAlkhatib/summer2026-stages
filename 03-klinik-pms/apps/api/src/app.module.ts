@@ -15,6 +15,7 @@ import { KayitlarModule } from './kayitlar/kayitlar.module';
 import { MalzemelerModule } from './malzemeler/malzemeler.module';
 import { FaturalarModule } from './faturalar/faturalar.module';
 import { RaporlarModule } from './raporlar/raporlar.module';
+import { HastaPortalModule } from './hasta-portal/hasta-portal.module';
 import { SeedService } from './seed/seed.service';
 
 @Module({
@@ -46,6 +47,7 @@ import { SeedService } from './seed/seed.service';
     MalzemelerModule,
     FaturalarModule,
     RaporlarModule,
+    HastaPortalModule,
   ],
   providers: [SeedService],
 })
