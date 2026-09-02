@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* Proje renkleri — otelcilik icin sicak bir palet secildi */
+@theme {
+  --color-lacivert: #1b3a4b;
+  --color-lacivert-acik: #285a72;
+  --color-bakir: #c1662f;
+  --color-bakir-acik: #e08a4f;
+  --color-krem: #f7f4ef;
+}
+
+body {
+  background-color: var(--color-krem);
+  color: #1f2933;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}

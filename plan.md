@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Proje 1-5 tamamlandı. Proje 6 (Apart & Otel) sırada.
+**Durum:** Proje 1-6 tamamlandı. Proje 7 (Emlak CRM) sırada.
 
 ---
 
@@ -20,7 +20,7 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 | 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
 | 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
-| 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
+| 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 7 | `07-emlak-crm/` | Emlak & Kiralama CRM | _(atanacak)_ | ⬜ Başlamadı |
 | 8 | `08-kargo-dagitim/` | Kargo & Son Kilometre Dağıtım | _(atanacak)_ | ⬜ Başlamadı |
 
@@ -51,7 +51,8 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 |-------|-------|
 | **Redis kaldırıldı** (Proje 8) | Öğrenci seviyesinin çok üstünde. Aynı canlı takip işlevi düz PostgreSQL sorguları + periyodik yoklama (polling) ile yapılıyor. |
 | **WPF kullanılmıyor**, sadece WinForms | Müşteri kararı: WPF eski/ağır. 3 masaüstü uygulaması da WinForms. |
-| **SQL Server Docker'da** | macOS için yerel SQL Server kurulumu yok. Diğer tüm veritabanları yerel (Homebrew). |
+| **SQL Server ve MySQL Docker'da** | macOS 13 için yerel kurulum yok / kaynaktan derleme saatler sürüyor. |
+| **MongoDB de Docker'da (:27018)** | Bu makinede 27017 portu başka bir projenin konteynerinde. Docker + farklı port, hem çakışmayı hem de ayrı kurulum gereğini ortadan kaldırıyor. |
 
 ---
 
@@ -102,7 +103,7 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 | 3 | 3103 | 5103 | Electron |
 | 4 | 3104 | 5104 | — |
 | 5 | 5105 | — | SQL Server 1434 |
-| 6 | 3106 | 3116 (Next.js) | — |
+| 6 | 3106 | 3116 (Next.js) | MongoDB 27018 |
 | 7 | 8107 | 5107 | — |
 | 8 | 3108 | 5108 | Electron |
 
@@ -115,7 +116,7 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 | 3 | PostgreSQL (yerel) | `clinic_db` |
 | 4 | MySQL (yerel) | `gym_db` |
 | 5 | SQL Server (Docker :1434) | `vansales_db` |
-| 6 | MongoDB (yerel, mevcut 4.4) | `pms_rentals` |
+| 6 | MongoDB 7 (Docker :27018) | `pms_rentals` |
 | 7 | PostgreSQL (yerel) | `realestate_crm` |
 | 8 | PostgreSQL (yerel) | `courier_db` |
 
@@ -165,7 +166,7 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 | Araç | Mevcut durum | Yapılacak | Kim için |
 |------|--------------|-----------|----------|
 | Node.js 22 + npm/pnpm | ✅ kurulu | — | 1,3,4,6,8 |
-| MongoDB 4.4 | ✅ kurulu | — | 6 |
+| MongoDB | ✅ yerel 4.4 kurulu, **proje 6 Docker mongo:7 (:27018) kullanıyor** | — | 6 |
 | Docker 20.10 | ✅ kurulu | SQL Server 2022 imajı çekilecek | 2,5 |
 | Android SDK + AVD (`Pixel_4_API_33`) | ✅ kurulu | ✅ `adb` PATH'e eklendi | tüm mobil |
 | Xcode | ✅ kurulu | (kullanılmayacak — Android hedefli) | — |
@@ -313,7 +314,7 @@ mal girişi, yeni ürün), `YuklemeForm` (depodan araca yükleme), `AraclarForm`
 
 ---
 
-### Proje 6 — Apart & Otel Rezervasyon Yönetimi  ⬜
+### Proje 6 — Apart & Otel Rezervasyon Yönetimi  ✅
 `06-apart-otel/`
 
 **Ana akış:** Sürükle-bırak oda takvimi → konaklama maliyeti takibi
@@ -321,9 +322,24 @@ mal girişi, yeni ürün), `YuklemeForm` (depodan araca yükleme), `AraclarForm`
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + MongoDB (Mongoose) | ⬜ |
-| `apps/web` | Next.js + Tailwind CSS | ⬜ |
-| `apps/mobile` | React Native (Expo) — temizlik/bakım ekibi | ⬜ |
+| `apps/api` | Express 5 + MongoDB 7 (Mongoose, Docker :27018) | ✅ Tamamlandı |
+| `apps/web` | Next.js 16 (App Router) + Tailwind CSS 4 | ✅ Tamamlandı |
+| `apps/mobile` | React Native (Expo SDK 57) — temizlik/bakım ekibi | ✅ Tamamlandı (emülatörde test edildi) |
+
+**Projenin özü — çıkış → otomatik görev → oda tekrar satışta.**
+`POST /api/reservations/:id/check-out` önce ödenmemiş bakiyeyi kontrol eder,
+sonra odayı `temizlik` durumuna alır ve `source: 'cikis'` işaretli bir temizlik
+görevi açar. Personel mobil uygulamada görevi kapattığında odada bekleyen başka
+iş yoksa oda `musait` durumuna döner.
+
+**Sürükle-bırak takvim:** satır = oda, sütun = gün; rezervasyon çubukları HTML5
+sürükle-bırak ile taşınır (`PUT /reservations/:id/move`). Çakışma kuralı
+"giriş günü dolu, çıkış günü boş": `checkIn < yeniCikis && checkOut > yeniGiris`.
+
+**Doğrulanan akış:** takvim taşıma + çakışma reddi → ödenmemiş bakiyeyle çıkış
+engeli → tahsilat → çıkış → 401 nolu oda için otomatik görev → mobil uygulamada
+`temizlik1` görevi tamamladı → "201 nolu oda satışa açıldı" → sunucuda oda
+durumu `musait`.
 
 ---
 
@@ -400,5 +416,6 @@ mal girişi, yeni ürün), `YuklemeForm` (depodan araca yükleme), `AraclarForm`
 | 2026-09-02 | **Proje 4 tamamlandı** — turnike mantığı (süre/seans/aynı gün tekrar girişi) doğrulandı, üye QR kodu emülatörde çalışıyor. WinForms'ta seri port turnike donanımı katmanı yazıldı (donanım yoksa simülasyon moduna düşüyor). |
 | 2026-09-02 | Proje 5 (Araç Satış & Depo) başladı. |
 | 2026-09-02 | Proje 5 tamamlandı: API + Flutter çevrimdışı mobil (emülatörde uçtan uca doğrulandı) + WinForms depo uygulaması + README/KURULUM + 13 ekran görüntüsü. |
+| 2026-09-02 | Proje 6 tamamlandı: Express+MongoDB API, Next.js sürükle-bırak oda takvimi, Expo görev uygulaması (emülatörde doğrulandı), README/KURULUM + 12 ekran görüntüsü. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
