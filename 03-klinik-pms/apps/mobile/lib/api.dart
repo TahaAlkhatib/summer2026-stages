@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -78,6 +79,8 @@ class Api {
       return _oku(cevap);
     } on SocketException {
       throw ApiHatasi('Sunucuya bağlanılamadı. API çalışıyor mu?');
+    } on TimeoutException {
+      throw ApiHatasi('Sunucu yanıt vermedi. Lütfen tekrar deneyin.');
     }
   }
 
@@ -90,6 +93,8 @@ class Api {
       return _oku(cevap);
     } on SocketException {
       throw ApiHatasi('Sunucuya bağlanılamadı. API çalışıyor mu?');
+    } on TimeoutException {
+      throw ApiHatasi('Sunucu yanıt vermedi. Lütfen tekrar deneyin.');
     }
   }
 }

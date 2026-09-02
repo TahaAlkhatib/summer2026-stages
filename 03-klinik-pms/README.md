@@ -106,6 +106,36 @@ Planlandı ──▶ Geldi (resepsiyon check-in) ──▶ Tamamlandı (doktor m
 
 ---
 
+## Ekran Görüntüleri
+
+### Web Portalı
+
+| Panel | Randevular |
+|-------|------------|
+| ![Panel](docs/ekranlar/web-02-panel.png) | ![Randevular](docs/ekranlar/web-03-randevular.png) |
+
+| Yeni Randevu (slot seçimi) | Hasta Detayı |
+|----------------------------|--------------|
+| ![Yeni Randevu](docs/ekranlar/web-04-yeni-randevu.png) | ![Hasta](docs/ekranlar/web-06-hasta-detay.png) |
+
+| Sarf Malzeme | Fatura (çok seanslı) |
+|--------------|----------------------|
+| ![Malzeme](docs/ekranlar/web-07-malzemeler.png) | ![Fatura](docs/ekranlar/web-09-fatura-detay.png) |
+
+### Resepsiyon Masaüstü Uygulaması
+
+| Giriş | Bugünkü Randevular ve Check-in |
+|-------|-------------------------------|
+| ![Giriş](docs/ekranlar/resepsiyon-giris.png) | ![Randevular](docs/ekranlar/resepsiyon-randevular.png) |
+
+### Hasta Mobil Uygulaması
+
+| Giriş (TC + telefon) | Randevularım | Ödemelerim |
+|----------------------|--------------|------------|
+| ![Giriş](docs/ekranlar/mobil-giris.png) | ![Randevular](docs/ekranlar/mobil-randevular.png) | ![Ödemeler](docs/ekranlar/mobil-odemeler.png) |
+
+---
+
 ## Demo Hesapları
 
 | Kullanıcı Adı | Şifre | Rol |
