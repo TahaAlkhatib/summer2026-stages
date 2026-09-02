@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Proje 1-6 tamamlandı. Proje 7 (Emlak CRM) sırada.
+**Durum:** Proje 1-7 tamamlandı. Proje 8 (Kargo & Dağıtım) sırada.
 
 ---
 
@@ -21,7 +21,7 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 | 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
 | 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
-| 7 | `07-emlak-crm/` | Emlak & Kiralama CRM | _(atanacak)_ | ⬜ Başlamadı |
+| 7 | `07-emlak-crm/` | Emlak & Kiralama CRM | _(atanacak)_ | ✅ Tamamlandı |
 | 8 | `08-kargo-dagitim/` | Kargo & Son Kilometre Dağıtım | _(atanacak)_ | ⬜ Başlamadı |
 
 Durum kodları: ⬜ Başlamadı · 🟡 Devam ediyor · 🔵 Windows bekliyor · ✅ Tamamlandı
@@ -40,7 +40,7 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 | 4 | Spor Salonu | Express + **MySQL** | **WinForms** (.NET 8) | React + Vite | **React Native** (Expo) |
 | 5 | Araç Satış & Depo | **ASP.NET Core 8** + **SQL Server** | **WinForms** (.NET 8) | — | **Flutter** + SQLite (offline) |
 | 6 | Apart & Otel | Express + **MongoDB** (Mongoose) | — | **Next.js + Tailwind** | **React Native** (Expo) |
-| 7 | Emlak CRM | **Laravel 11** + PostgreSQL | — | **Vue 3** + Vite | **Flutter** |
+| 7 | Emlak CRM | **Laravel 13** + PostgreSQL | — | **Vue 3** + Vite | **Flutter** |
 | 8 | Kargo & Dağıtım | Express + PostgreSQL | **Electron** + React | React + Vite | **React Native** (Expo) |
 
 **Denge:** 4 Flutter / 4 React Native · 3 WinForms / 2 Electron · 4 Node.js / 2 .NET / 1 NestJS / 1 Laravel · React, Next.js ve Vue temsil ediliyor.
@@ -52,6 +52,8 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 | **Redis kaldırıldı** (Proje 8) | Öğrenci seviyesinin çok üstünde. Aynı canlı takip işlevi düz PostgreSQL sorguları + periyodik yoklama (polling) ile yapılıyor. |
 | **WPF kullanılmıyor**, sadece WinForms | Müşteri kararı: WPF eski/ağır. 3 masaüstü uygulaması da WinForms. |
 | **SQL Server ve MySQL Docker'da** | macOS 13 için yerel kurulum yok / kaynaktan derleme saatler sürüyor. |
+| **Laravel 11 yerine Laravel 13** | PDF'te Laravel 11 yazıyordu; `composer create-project` güncel sürümü (13) kuruyor. Öğrencinin bugün kuracağı sürümle aynı olması daha faydalı. |
+| **PHP Docker imajıyla çalışıldı** | Bu Mac'te PHP yok ve macOS 13 için Homebrew kaynaktan derliyor. Teslim edilen proje düz Laravel; sadece geliştirme sırasında `bluepixel-php:8.3` imajı kullanıldı. Öğrenci Windows'ta PHP/Laragon ile normal şekilde çalıştırır. |
 | **MongoDB de Docker'da (:27018)** | Bu makinede 27017 portu başka bir projenin konteynerinde. Docker + farklı port, hem çakışmayı hem de ayrı kurulum gereğini ortadan kaldırıyor. |
 
 ---
@@ -172,7 +174,7 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 | Xcode | ✅ kurulu | (kullanılmayacak — Android hedefli) | — |
 | .NET SDK | ✅ **9.0.317** — `~/.dotnet` (sudo'suz kuruldu) | — | 2,5 + WinForms |
 | Flutter / Dart | ✅ **3.24.5** (Dart 3.5.4) — `~/flutter` | ⚠️ sürüm sabitlendi, aşağıdaki nota bakın | 2,3,5,7 |
-| PHP + Composer | ❌ yok | `brew install php composer` | 7 |
+| PHP + Composer | ⚠️ makinede yok — **Docker imajı** `bluepixel-php:8.3` ile çalışıldı | — | 7 |
 | PostgreSQL | ✅ 16.15 kurulu ve çalışıyor | — | 1,3,7,8 |
 | MySQL | ❌ yok | `brew install mysql` | 4 |
 
@@ -343,7 +345,7 @@ durumu `musait`.
 
 ---
 
-### Proje 7 — Emlak & Kiralama CRM  ⬜
+### Proje 7 — Emlak & Kiralama CRM  ✅
 `07-emlak-crm/`
 
 **Ana akış:** Portföy ve talep kaydı → otomatik eşleştirme → kira sözleşmesi
@@ -351,9 +353,25 @@ durumu `musait`.
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Laravel 11 + PostgreSQL | ⬜ |
-| `apps/web` | Vue 3 + Vite | ⬜ |
-| `apps/mobile` | Flutter (danışman) | ⬜ |
+| `apps/api` | Laravel 13 + PostgreSQL (Sanctum, Eloquent) | ✅ Tamamlandı |
+| `apps/web` | Vue 3 (Composition API) + Vite | ✅ Tamamlandı |
+| `apps/mobile` | Flutter 3.24.5 (danışman) | ✅ Tamamlandı (emülatörde test edildi) |
+
+**Projenin özü — otomatik eşleştirme ve taksit takvimi.** `Demand::eslesenPortfoyler()`
+boş bırakılan kriterleri atlayarak aktif portföyleri süzer; oda sayısı "2+1" gibi
+metin olduğu için PostgreSQL `split_part` ile ilk rakam sayıya çevrilip
+karşılaştırılır. Kira sözleşmesi açıldığında `ContractController::taksitleriOlustur()`
+aylık taksitleri tek transaction içinde üretir (`min($odemeGunu, $ay->daysInMonth)`
+ile şubat taşması engellenir) ve portföy "kiralandı" olur.
+
+**Doğrulanan akışlar:** talep→eşleştirme (8 talep, eşleşme sayıları doğru) ·
+kira sözleşmesi→12 aylık taksit takvimi · aynı portföye ikinci sözleşme engeli ·
+kısmi tahsilat ve "kalan tutardan fazla olamaz" kontrolü · evrak yükleme+indirme
+(MIME doğrulaması dahil) · danışman çakışma kontrolü · mobilde randevu sonucu
+girme (emülatörde uçtan uca).
+
+**Türkçe doğrulama mesajları:** `lang/tr/validation.php` eklendi; Laravel'in
+İngilizce mesajları yerine "Ad soyad zorunludur." gibi Türkçe metinler döner.
 
 ---
 
@@ -365,7 +383,7 @@ durumu `musait`.
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
+| `apps/api` | Express + PostgreSQL | ⬜ |
 | `apps/desktop` | Electron + React — giriş & irsaliye basımı | ⬜ |
 | `apps/web-merchant` | React + Vite (tacir portalı) | ⬜ |
 | `apps/mobile` | React Native (Expo) — sürücü | ⬜ |
@@ -417,5 +435,6 @@ durumu `musait`.
 | 2026-09-02 | Proje 5 (Araç Satış & Depo) başladı. |
 | 2026-09-02 | Proje 5 tamamlandı: API + Flutter çevrimdışı mobil (emülatörde uçtan uca doğrulandı) + WinForms depo uygulaması + README/KURULUM + 13 ekran görüntüsü. |
 | 2026-09-02 | Proje 6 tamamlandı: Express+MongoDB API, Next.js sürükle-bırak oda takvimi, Expo görev uygulaması (emülatörde doğrulandı), README/KURULUM + 12 ekran görüntüsü. |
+| 2026-09-02 | Proje 7 tamamlandı: Laravel 13 + PostgreSQL API, Vue 3 yönetim paneli, Flutter danışman uygulaması, README/KURULUM + 16 ekran görüntüsü. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

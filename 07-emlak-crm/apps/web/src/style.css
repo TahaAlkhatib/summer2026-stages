@@ -1,0 +1,158 @@
+/* Emlak CRM — ortak stiller */
+
+:root {
+  --yesil-koyu: #14532d;
+  --yesil: #16803c;
+  --yesil-acik: #22a34f;
+  --altin: #b58a2b;
+  --zemin: #f4f6f4;
+  --beyaz: #ffffff;
+  --metin: #1f2933;
+  --soluk: #6b7280;
+  --cizgi: #e3e7e3;
+  --kirmizi: #b91c1c;
+  --sari: #b45309;
+  --mavi: #1d4ed8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--zemin);
+  color: var(--metin);
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 14px;
+}
+
+a { color: var(--yesil); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Yerleşim ---- */
+.uygulama { display: flex; min-height: 100vh; }
+
+.kenar {
+  width: 230px;
+  flex-shrink: 0;
+  background: var(--yesil-koyu);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.kenar-baslik { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.kenar-baslik h1 { margin: 0; font-size: 18px; }
+.kenar-baslik span { font-size: 12px; color: var(--altin); }
+.kenar nav { flex: 1; padding: 10px 0; }
+.kenar nav a {
+  display: block; padding: 10px 20px; color: #d7e3d9;
+  border-left: 4px solid transparent; font-size: 14px;
+}
+.kenar nav a:hover { background: rgba(255,255,255,0.06); text-decoration: none; }
+.kenar nav a.aktif {
+  background: rgba(255,255,255,0.1); border-left-color: var(--altin);
+  color: #fff; font-weight: 600;
+}
+.kenar-alt { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.12); }
+.kenar-alt .ad { font-weight: 600; }
+.kenar-alt .rol { font-size: 12px; color: #a8bcae; margin-bottom: 10px; }
+
+.icerik { flex: 1; padding: 24px; overflow-x: auto; }
+
+/* ---- Başlıklar ---- */
+.sayfa-basligi { display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.sayfa-basligi h2 { margin: 0; color: var(--yesil-koyu); font-size: 22px; }
+.sayfa-basligi p { margin: 2px 0 0; color: var(--soluk); font-size: 13px; }
+
+/* ---- Kart ---- */
+.kart { background: var(--beyaz); border-radius: 10px; padding: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+.kart h3 { margin: 0 0 12px; font-size: 15px; color: var(--yesil-koyu); }
+
+.kartlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.ozet-kart { background: var(--beyaz); border-radius: 10px; padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.ozet-kart .etiket { font-size: 12px; color: var(--soluk); }
+.ozet-kart .deger { font-size: 22px; font-weight: bold; margin-top: 4px; }
+.ozet-kart .alt { font-size: 11px; color: var(--soluk); }
+
+/* ---- Tablo ---- */
+table { width: 100%; border-collapse: collapse; background: var(--beyaz); }
+thead th {
+  text-align: left; font-size: 11px; text-transform: uppercase;
+  color: var(--soluk); padding: 10px 12px; background: #f8faf8;
+  border-bottom: 1px solid var(--cizgi);
+}
+tbody td { padding: 10px 12px; border-bottom: 1px solid var(--cizgi); }
+tbody tr:hover { background: #fafcfa; }
+.sag { text-align: right; white-space: nowrap; }
+.tablo-kutu { background: var(--beyaz); border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+
+/* ---- Form ---- */
+label { display: block; font-size: 12px; color: var(--soluk); margin-bottom: 4px; }
+input, select, textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--cizgi);
+  border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--yesil-acik); border-color: transparent; }
+.alan { margin-bottom: 12px; }
+.izgara { display: grid; gap: 12px; }
+.izgara-2 { grid-template-columns: repeat(2, 1fr); }
+.izgara-3 { grid-template-columns: repeat(3, 1fr); }
+.izgara-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Onay kutulu satır — etiket ve kutu yan yana dursun */
+label.onay { display: flex; align-items: center; gap: 7px; font-size: 13px;
+  color: var(--metin); margin-bottom: 0; }
+label.onay input { width: auto; }
+
+/* ---- Düğme ---- */
+button { font-family: inherit; font-size: 14px; cursor: pointer; border: none;
+  border-radius: 8px; padding: 9px 16px; }
+.dugme { background: var(--yesil); color: #fff; }
+.dugme:hover { background: var(--yesil-acik); }
+.dugme-ikincil { background: #fff; color: var(--metin); border: 1px solid var(--cizgi); }
+.dugme-ikincil:hover { background: #f3f4f3; }
+.dugme-altin { background: var(--altin); color: #fff; }
+.dugme-tehlike { background: #fff; color: var(--kirmizi); border: 1px solid #f0c4c4; }
+.dugme-tehlike:hover { background: #fef2f2; }
+button:disabled { opacity: 0.55; cursor: default; }
+.dugme-kucuk { padding: 5px 10px; font-size: 12px; }
+
+/* ---- Rozet ---- */
+.rozet { display: inline-block; padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; }
+.rozet-yesil { background: #dcfce7; color: #15803d; }
+.rozet-mavi { background: #dbeafe; color: #1d4ed8; }
+.rozet-sari { background: #fef3c7; color: #b45309; }
+.rozet-kirmizi { background: #fee2e2; color: #b91c1c; }
+.rozet-gri { background: #e5e7eb; color: #4b5563; }
+
+/* ---- Uyarı ---- */
+.uyari { padding: 11px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; }
+.uyari-hata { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.uyari-basari { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
+.uyari-bilgi { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+
+/* ---- Filtre satırı ---- */
+.filtreler { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: flex-end; }
+.filtreler .alan { margin-bottom: 0; }
+.filtreler input, .filtreler select { min-width: 150px; }
+
+/* ---- Pencere (modal) ---- */
+.perde { position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 30px 16px; overflow-y: auto; z-index: 50; }
+.pencere { background: #fff; border-radius: 12px; width: 100%; max-width: 720px; }
+.pencere-ust { padding: 16px 20px; border-bottom: 1px solid var(--cizgi);
+  display: flex; justify-content: space-between; align-items: center; }
+.pencere-ust h3 { margin: 0; color: var(--yesil-koyu); }
+.pencere-govde { padding: 20px; }
+.pencere-alt { padding: 14px 20px; border-top: 1px solid var(--cizgi);
+  display: flex; justify-content: flex-end; gap: 8px; background: #fafbfa;
+  border-radius: 0 0 12px 12px; }
+
+.bos { text-align: center; color: #9ca3af; padding: 30px; }
+.soluk { color: var(--soluk); }
+.kucuk { font-size: 12px; }
