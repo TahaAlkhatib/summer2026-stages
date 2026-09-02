@@ -18,8 +18,8 @@ namespace VanSalesApi.Data
             {
                 new User { FullName = "Ahmet Yılmaz",  Username = "admin",    PasswordHash = sifre, Role = "admin",  Phone = "+90 532 111 22 33" },
                 new User { FullName = "Zeynep Kaya",   Username = "depo1",    PasswordHash = sifre, Role = "depo",   Phone = "+90 533 222 33 44" },
-                new User { FullName = "Mustafa Demir", Username = "mandub1",  PasswordHash = sifre, Role = "mandub", Phone = "+90 534 333 44 55" },
-                new User { FullName = "Hakan Öztürk",  Username = "mandub2",  PasswordHash = sifre, Role = "mandub", Phone = "+90 535 444 55 66" },
+                new User { FullName = "Mustafa Demir", Username = "saha1",  PasswordHash = sifre, Role = "saha", Phone = "+90 534 333 44 55" },
+                new User { FullName = "Hakan Öztürk",  Username = "saha2",  PasswordHash = sifre, Role = "saha", Phone = "+90 535 444 55 66" },
             };
             db.Users.AddRange(personel);
             db.SaveChanges();

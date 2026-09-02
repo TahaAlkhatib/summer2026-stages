@@ -14,7 +14,7 @@ Türkçe demo verisini yükler. SQL Server, `docker-compose.yml` ile **1434** po
 
 | Tablo | Açıklama |
 |-------|----------|
-| `Users` | Personel: admin, depo, mandub (satış temsilcisi) |
+| `Users` | Personel: admin, depo, saha (satış temsilcisi) |
 | `Vans` | Satış araçları, sürücü ataması |
 | `Products` | Merkez depo ürünleri ve stoğu |
 | `VanStocks` | Araç üstü envanter (araç + ürün benzersiz) |

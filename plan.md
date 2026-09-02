@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Proje 1-4 tamamlandı. Proje 5 (Araç Satış & Depo) geliştiriliyor.
+**Durum:** Proje 1-5 tamamlandı. Proje 6 (Apart & Otel) sırada.
 
 ---
 
@@ -19,7 +19,7 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 | 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
-| 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | 🟡 Devam ediyor |
+| 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
 | 7 | `07-emlak-crm/` | Emlak & Kiralama CRM | _(atanacak)_ | ⬜ Başlamadı |
 | 8 | `08-kargo-dagitim/` | Kargo & Son Kilometre Dağıtım | _(atanacak)_ | ⬜ Başlamadı |
@@ -137,6 +137,19 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 > version 14.0`). Bu yüzden `~/flutter` deposu **3.24.5** etiketine sabitlendi.
 > `flutter upgrade` **çalıştırmayın** — çalıştırılırsa Flutter tamamen bozulur.
 > Proje 3, 5 ve 7 de bu sürümü kullanacak.
+>
+> ⚠️ **Flutter eklenti sürümleri.** 3.24.5'in Gradle eklentisi, plugin projelerine
+> `android.flutter` uzantısını **eklemiyor** (bu Flutter 3.27 ile geldi). Bu yüzden
+> `android/build.gradle` dosyasında `compileSdk flutter.compileSdkVersion` yazan
+> yeni eklentiler derlenmiyor:
+> `Could not get unknown property 'flutter' for extension 'android'`.
+> Proje 5'te karşılaşıldı; şu sürümler çalışıyor:
+> `geolocator: 11.0.0` + `dependency_overrides: geolocator_android: 4.5.5`,
+> `connectivity_plus: ^6.1.0`. Yeni bir Flutter eklentisi eklerken `flutter run`
+> ile derlemeyi hemen deneyin; bu hatayı alırsanız eklentiyi bir alt sürüme çekin.
+>
+> ⚠️ **geolocator 11 API farkı:** `getCurrentPosition(locationSettings: ...)`
+> yerine `getCurrentPosition(desiredAccuracy: LocationAccuracy.medium)` kullanılır.
 >
 > ⚠️ **.NET SDK**, `dotnet-install.sh` betiğiyle `~/.dotnet` altına **yönetici şifresi
 > gerektirmeden** kuruldu (brew cask'i sudo istiyor). PATH ayarı `~/.zshrc` içinde.
@@ -269,17 +282,34 @@ Her proje için bitiş tanımı (Definition of Done):
 
 ---
 
-### Proje 5 — Araç Üstü Satış & Depo Yönetimi  ⬜
+### Proje 5 — Araç Üstü Satış & Depo Yönetimi  ✅
 `05-arac-satis-depo/`
 
 **Ana akış:** Merkez depo stoğu → araca yükleme → sahada **çevrimdışı** nakit/vadeli fatura
-+ fiş basımı → internet gelince senkronizasyon → GPS konum takibi.
+→ internet gelince senkronizasyon → tahsilat → GPS konum/rota takibi.
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | ASP.NET Core 8 + SQL Server | ⬜ |
-| `apps/desktop-winforms` | WinForms (net9.0-windows) — merkez depo | ⬜ İskelet hazır, kod yazılacak |
-| `apps/mobile` | Flutter + SQLite (offline-first) + GPS | ⬜ |
+| `apps/api` | ASP.NET Core 9 + EF Core 9 + SQL Server 2022 (Docker :1434) | ✅ Tamamlandı |
+| `apps/desktop-winforms` | WinForms (net9.0-windows) — merkez depo, 6 tasarımcı formu | 🔵 Kod yazıldı, Windows'ta derlenecek |
+| `apps/mobile` | Flutter 3.24.5 + sqflite (offline-first) + GPS | ✅ Tamamlandı (emülatörde test edildi) |
+
+**Projenin özü — mükerrer kayıt önleme.** Her fatura/tahsilat cihazda üretilen bir
+`offline_id` ile gönderilir; sunucu bu alanda benzersiz indeks tutar ve aynı kimliği
+ikinci kez görürse `zaten_var` döner. Mobil uygulama `kaydedildi` ile `zaten_var`
+durumlarını aynı şekilde ele aldığı için, gönderim sırasında bağlantı kopsa bile
+tekrar denemede **çift fatura oluşmaz.**
+
+**Emülatörde doğrulanan uçtan uca akış:**
+`saha1` girişi → katalog indi → Wi-Fi kapatıldı → 3 × Ayçiçek Yağı satışı
+(1.386,00 ₺) çevrimdışı kaydedildi → şerit "1 kayıt bekliyor" → Wi-Fi açıldı →
+Senkronize Et → sunucudan `FS-2026-000006` numarası geldi → araç stoğu 32 → 29 →
+1.000,00 ₺ tahsilat alındı ve sunucuya işlendi (kalan 3.570 → 2.570 ₺).
+
+**WinForms formları:** `LoginForm`, `MainForm` (genel durum), `StokForm` (depo stoğu,
+mal girişi, yeni ürün), `YuklemeForm` (depodan araca yükleme), `AraclarForm`
+(araç stoğu + GPS rotası), `FaturalarForm`, `GunSonuForm`. Hepsi `Form.cs` +
+`Form.Designer.cs` — tasarımcıda düzenlenebilir.
 
 ---
 
@@ -369,5 +399,6 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | Proje 4 (Spor Salonu) başladı. MySQL Docker'da (macOS 13'te kaynaktan derleme saatler sürüyor). |
 | 2026-09-02 | **Proje 4 tamamlandı** — turnike mantığı (süre/seans/aynı gün tekrar girişi) doğrulandı, üye QR kodu emülatörde çalışıyor. WinForms'ta seri port turnike donanımı katmanı yazıldı (donanım yoksa simülasyon moduna düşüyor). |
 | 2026-09-02 | Proje 5 (Araç Satış & Depo) başladı. |
+| 2026-09-02 | Proje 5 tamamlandı: API + Flutter çevrimdışı mobil (emülatörde uçtan uca doğrulandı) + WinForms depo uygulaması + README/KURULUM + 13 ekran görüntüsü. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

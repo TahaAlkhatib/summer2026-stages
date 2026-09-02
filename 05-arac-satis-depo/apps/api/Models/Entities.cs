@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace VanSalesApi.Models
 {
-    // Personel: admin (yönetici), depo (depo sorumlusu), mandub (satış temsilcisi)
+    // Personel: admin (yönetici), depo (depo sorumlusu), saha (satış temsilcisi)
     public class User
     {
         public int Id { get; set; }
