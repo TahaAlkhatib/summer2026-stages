@@ -1,0 +1,21 @@
+# Spor Salonu - MySQL veritabanı
+# macOS 13 (Ventura) için Homebrew hazır paket yayınlamadığından MySQL kaynaktan
+# derlenmek zorunda kalıyor (saatler sürüyor). Bu yüzden Docker kullanılıyor.
+# Başlatmak için:  docker compose up -d
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: sporsalonu-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "SporSalonu2026!"
+      MYSQL_DATABASE: gym_db
+      MYSQL_USER: gym_user
+      MYSQL_PASSWORD: gym123
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_turkish_ci
+    volumes:
+      - sporsalonu-data:/var/lib/mysql
+
+volumes:
+  sporsalonu-data:
