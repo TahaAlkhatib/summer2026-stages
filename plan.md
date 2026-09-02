@@ -4,7 +4,7 @@
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
 **Son güncelleme:** 2026-09-01
-**Durum:** Proje 1, 2 ve 3 tamamlandı. Proje 4 (Spor Salonu) geliştiriliyor.
+**Durum:** Proje 1-4 tamamlandı. Proje 5 (Araç Satış & Depo) geliştiriliyor.
 
 ---
 
@@ -18,8 +18,8 @@ alt klasöründe geliştirilir. Tüm kullanıcı arayüzleri ve dokümantasyon *
 | 1 | `01-camasirhane-erp/` | Çamaşırhane & Kuru Temizleme ERP | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
 | 2 | `02-oto-servis/` | Oto Servis & Bakım Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
 | 3 | `03-klinik-pms/` | Klinik & Poliklinik Yönetimi | _(atanacak)_ | ✅ Tamamlandı |
-| 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | 🟡 Devam ediyor |
-| 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
+| 4 | `04-spor-salonu/` | Spor Salonu & Turnike Otomasyonu | _(atanacak)_ | ✅ Tamamlandı (WinForms Windows'ta test edilecek) |
+| 5 | `05-arac-satis-depo/` | Araç Üstü Satış & Depo Yönetimi | _(atanacak)_ | 🟡 Devam ediyor |
 | 6 | `06-apart-otel/` | Apart & Otel Rezervasyon Yönetimi | _(atanacak)_ | ⬜ Başlamadı |
 | 7 | `07-emlak-crm/` | Emlak & Kiralama CRM | _(atanacak)_ | ⬜ Başlamadı |
 | 8 | `08-kargo-dagitim/` | Kargo & Son Kilometre Dağıtım | _(atanacak)_ | ⬜ Başlamadı |
@@ -254,7 +254,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 ---
 
-### Proje 4 — Spor Salonu & Turnike Otomasyonu  ⬜
+### Proje 4 — Spor Salonu & Turnike Otomasyonu  ✅
 `04-spor-salonu/`
 
 **Ana akış:** Üyelik paketleri → QR/RFID turnike girişi (donanım simülasyonu)
@@ -262,10 +262,10 @@ Her proje için bitiş tanımı (Definition of Done):
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + MySQL | ⬜ |
-| `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa + turnike paneli | ⬜ İskelet hazır, kod yazılacak |
+| `apps/api` | Express 5 + MySQL 8 (Docker) | ✅ Tamamlandı |
+| `apps/desktop-winforms` | WinForms — kasa + turnike donanımı (seri port) | 🔵 Kod yazıldı, Windows'ta derlenecek |
 | `apps/web-admin` | React + Vite | ✅ Tamamlandı |
-| `apps/mobile` | React Native (Expo) | ⬜ |
+| `apps/mobile` | React Native (Expo) + QR kod | ✅ Tamamlandı (emülatörde test edildi) |
 
 ---
 
@@ -366,6 +366,8 @@ Her proje için bitiş tanımı (Definition of Done):
 | 2026-09-02 | Proje 3 (Klinik PMS) başladı: NestJS 12 + TypeORM 1.1 + PostgreSQL, `clinic_db` oluşturuldu. |
 | 2026-09-02 | **Proje 3 tamamlandı** — API, web portalı, Electron resepsiyon ve Flutter hasta uygulaması. Hasta portalı için ayrı kimlik doğrulama eklendi (TC + telefon). |
 | 2026-09-02 | Flutter uygulamalarında `TimeoutException` yakalanmıyordu, ham hata mesajı Türkçe arayüze sızıyordu. Proje 2 ve 3'te düzeltildi. |
-| 2026-09-02 | Proje 4 (Spor Salonu) başladı. |
+| 2026-09-02 | Proje 4 (Spor Salonu) başladı. MySQL Docker'da (macOS 13'te kaynaktan derleme saatler sürüyor). |
+| 2026-09-02 | **Proje 4 tamamlandı** — turnike mantığı (süre/seans/aynı gün tekrar girişi) doğrulandı, üye QR kodu emülatörde çalışıyor. WinForms'ta seri port turnike donanımı katmanı yazıldı (donanım yoksa simülasyon moduna düşüyor). |
+| 2026-09-02 | Proje 5 (Araç Satış & Depo) başladı. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

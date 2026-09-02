@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -6,6 +6,13 @@
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SporSalonuKasa</AssemblyName>
+    <RootNamespace>SporSalonuKasa</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Turnike donanimi seri port uzerinden haberlesir -->
+    <PackageReference Include="System.IO.Ports" Version="9.0.19" />
+  </ItemGroup>
 
 </Project>
