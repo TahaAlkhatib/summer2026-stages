@@ -9,19 +9,28 @@ use App\Models\Demand;
 use App\Models\Installment;
 use App\Models\Owner;
 use App\Models\Property;
+use App\Models\Document;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Önce eski demo verisini temizliyoruz
-        DB::statement('TRUNCATE documents, installments, contracts, appointments,
-                       demands, customers, properties, owners,
-                       personal_access_tokens, users RESTART IDENTITY CASCADE');
+        // Önce eski demo verisini temizliyoruz.
+        // MongoDB'de TRUNCATE yok; her koleksiyonu tek tek boşaltıyoruz.
+        Document::truncate();
+        Installment::truncate();
+        Contract::truncate();
+        Appointment::truncate();
+        Demand::truncate();
+        Customer::truncate();
+        Property::truncate();
+        Owner::truncate();
+        PersonalAccessToken::truncate();
+        User::truncate();
 
         $sifre = Hash::make('123456');
 

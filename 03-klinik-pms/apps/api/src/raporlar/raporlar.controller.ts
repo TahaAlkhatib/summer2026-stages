@@ -1,32 +1,32 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { Appointment, Invoice, Patient, Payment, Supply } from '../entities';
+import {
+  Appointment, AppointmentDocument, Invoice, InvoiceDocument,
+  Patient, PatientDocument, Payment, PaymentDocument, Supply, SupplyDocument,
+} from '../schemas';
 import { JwtGuard } from '../auth/jwt.guard';
+import { ayBasi, gunBasi, gunMetni, gunSonu } from '../tarih';
 
 @Controller('api/reports')
 @UseGuards(JwtGuard)
 export class RaporlarController {
   constructor(
-    @InjectRepository(Appointment) private randevular: Repository<Appointment>,
-    @InjectRepository(Invoice) private faturalar: Repository<Invoice>,
-    @InjectRepository(Payment) private odemeler: Repository<Payment>,
-    @InjectRepository(Patient) private hastalar: Repository<Patient>,
-    @InjectRepository(Supply) private malzemeler: Repository<Supply>,
+    @InjectModel(Appointment.name) private randevular: Model<AppointmentDocument>,
+    @InjectModel(Invoice.name) private faturalar: Model<InvoiceDocument>,
+    @InjectModel(Payment.name) private odemeler: Model<PaymentDocument>,
+    @InjectModel(Patient.name) private hastalar: Model<PatientDocument>,
+    @InjectModel(Supply.name) private malzemeler: Model<SupplyDocument>,
   ) {}
 
   @Get('summary')
   async ozet() {
-    const bugun = new Date();
-    bugun.setHours(0, 0, 0, 0);
-    const yarin = new Date(bugun);
-    yarin.setDate(yarin.getDate() + 1);
-
-    const ayBasi = new Date(bugun.getFullYear(), bugun.getMonth(), 1);
+    const bugun = gunBasi();
+    const yarin = gunSonu();
 
     const bugunkuRandevular = await this.randevular.find({
-      where: { startsAt: Between(bugun, yarin) },
+      startsAt: { $gte: bugun, $lt: yarin },
     });
 
     const durumSayilari: Record<string, number> = {
@@ -44,11 +44,11 @@ export class RaporlarController {
       .reduce((t, f) => t + (Number(f.totalAmount) - Number(f.paidAmount)), 0);
 
     const ayOdemeleri = await this.odemeler.find({
-      where: { createdAt: Between(ayBasi, yarin) },
+      createdAt: { $gte: ayBasi(), $lt: yarin },
     });
     const ayTahsilat = ayOdemeleri.reduce((t, o) => t + Number(o.amount), 0);
 
-    const hastaSayisi = await this.hastalar.count();
+    const hastaSayisi = await this.hastalar.countDocuments();
 
     const tumMalzemeler = await this.malzemeler.find();
     const kritikMalzemeler = tumMalzemeler.filter((m) => m.stockQuantity <= m.minStock);
@@ -71,16 +71,12 @@ export class RaporlarController {
   // Gün sonu kasa raporu — tahsilatların yöntem dağılımı
   @Get('daily')
   async gunluk(@Query('date') tarih: string) {
-    const gun = tarih ? new Date(tarih + 'T00:00:00') : new Date();
-    gun.setHours(0, 0, 0, 0);
-    const gunSonu = new Date(gun);
-    gunSonu.setDate(gunSonu.getDate() + 1);
+    const gun = gunBasi(tarih || undefined);
+    const bitis = gunSonu(tarih || undefined);
 
-    const odemeler = await this.odemeler.find({
-      where: { createdAt: Between(gun, gunSonu) },
-      relations: { invoice: { patient: true } },
-      order: { createdAt: 'ASC' },
-    });
+    const odemeler = await this.odemeler
+      .find({ createdAt: { $gte: gun, $lt: bitis } })
+      .sort({ createdAt: 1 });
 
     const kasa: Record<string, number> = { nakit: 0, kart: 0, havale: 0, toplam: 0 };
     for (const o of odemeler) {
@@ -91,30 +87,32 @@ export class RaporlarController {
       kasa.toplam += tutar;
     }
 
-    const randevular = await this.randevular.find({
-      where: { startsAt: Between(gun, gunSonu) },
-    });
-
-    // Yerel günü döndür (UTC kaymasını önlemek için)
-    const yerelTarih =
-      gun.getFullYear() + '-' +
-      String(gun.getMonth() + 1).padStart(2, '0') + '-' +
-      String(gun.getDate()).padStart(2, '0');
-
-    return {
-      date: yerelTarih,
-      appointment_count: randevular.length,
-      completed_count: randevular.filter((r) => r.status === 'tamamlandi').length,
-      collected: kasa,
-      payments: odemeler.map((o) => ({
-        id: o.id,
+    // Ödemelerin fatura ve hasta bilgisini tek tek çekiyoruz
+    const odemeListesi = [];
+    for (const o of odemeler) {
+      const fatura = await this.faturalar.findById(o.invoiceId);
+      const hasta = fatura ? await this.hastalar.findById(fatura.patientId) : null;
+      odemeListesi.push({
+        id: o._id.toString(),
         amount: Number(o.amount),
         method: o.method,
         session_no: o.sessionNo,
-        invoice_no: o.invoice?.invoiceNo,
-        patient_name: o.invoice?.patient?.fullName,
+        invoice_no: fatura?.invoiceNo,
+        patient_name: hasta?.fullName,
         created_at: o.createdAt,
-      })),
+      });
+    }
+
+    const randevular = await this.randevular.find({
+      startsAt: { $gte: gun, $lt: bitis },
+    });
+
+    return {
+      date: gunMetni(tarih || undefined),
+      appointment_count: randevular.length,
+      completed_count: randevular.filter((r) => r.status === 'tamamlandi').length,
+      collected: kasa,
+      payments: odemeListesi,
     };
   }
 }

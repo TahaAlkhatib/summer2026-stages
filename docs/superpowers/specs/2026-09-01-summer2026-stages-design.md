@@ -5,6 +5,13 @@
 **Source of scope:** `software_projects_scope.pdf` (8 project cards, Arabic)
 **Living tracker:** `plan.md` (root)
 
+> ⚠️ **Superseded in part (2026-09-03).** The owner decided PostgreSQL would not be
+> used at all. Projects 1, 3, 7 and 8 were migrated to MongoDB, so D6 and the D7
+> stack table below no longer describe the delivered work. The resulting balance is
+> **MongoDB 5, SQL Server 2, MySQL 1**. `plan.md` is the current source of truth;
+> each project's `db/README.md` documents its database. This document is kept as the
+> record of the original design decisions.
+
 ## Problem
 
 Eight university interns each need a complete, demonstrable software project to

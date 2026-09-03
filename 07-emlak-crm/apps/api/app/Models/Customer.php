@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
+use MongoDB\Laravel\Relations\HasMany;
 
 class Customer extends Model
 {
+    // MongoDB'de kolon varsayilan degeri (DEFAULT) yoktur. Eloquent'in
+    // $attributes dizisi yeni kayitlara bu degerleri kendisi ekler.
+    protected $attributes = [
+        'source' => 'telefon',
+    ];
+
     protected $fillable = [
         'full_name', 'phone', 'email', 'id_number', 'source', 'notes', 'agent_id',
     ];

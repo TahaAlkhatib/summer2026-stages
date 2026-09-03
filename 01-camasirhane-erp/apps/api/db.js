@@ -1,13 +1,10 @@
-// PostgreSQL bağlantı havuzu
-const { Pool } = require("pg");
+// MongoDB bağlantısı (Mongoose)
+const mongoose = require("mongoose");
 require("dotenv").config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+async function baglan() {
+  await mongoose.connect(process.env.MONGO_URL);
+  console.log("MongoDB bağlantısı kuruldu.");
+}
 
-module.exports = pool;
+module.exports = { mongoose, baglan };

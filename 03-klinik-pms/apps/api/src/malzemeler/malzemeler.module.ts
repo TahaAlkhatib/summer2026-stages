@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Supply } from '../entities';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Supply, SupplySchema } from '../schemas';
 import { MalzemelerController } from './malzemeler.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Supply])],
+  imports: [MongooseModule.forFeature([{ name: Supply.name, schema: SupplySchema }])],
   controllers: [MalzemelerController],
 })
 export class MalzemelerModule {}

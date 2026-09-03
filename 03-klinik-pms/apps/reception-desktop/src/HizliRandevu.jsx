@@ -40,7 +40,7 @@ function HizliRandevu() {
     try {
       await api.post("/appointments", {
         patientId: secilenHasta.id,
-        doctorId: Number(doktor),
+        doctorId: doktor,
         startsAt: tarih + "T" + saat + ":00",
       });
       setBasarili(

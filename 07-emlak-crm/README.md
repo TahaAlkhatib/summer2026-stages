@@ -14,10 +14,10 @@ taksit takvimi + hatırlatma → evrak arşivi**
 
 ```
                       ┌──────────────────────────┐
-                      │   PostgreSQL             │
+                      │   MongoDB                │
                       │   realestate_crm         │
                       └────────────┬─────────────┘
-                                   │  Eloquent ORM
+                                   │  Eloquent (laravel-mongodb)
                       ┌────────────┴─────────────┐
                       │  Laravel 13 REST API     │
                       │  Sanctum token + bcrypt  │
@@ -39,8 +39,8 @@ taksit takvimi + hatırlatma → evrak arşivi**
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Veritabanı | PostgreSQL (UTF-8) |
-| API | Laravel 13, Eloquent ORM, Sanctum, PHP 8.3 |
+| Veritabanı | MongoDB |
+| API | Laravel 13, mongodb/laravel-mongodb 5, Sanctum, PHP 8.3 |
 | Web | Vue 3 (Composition API) + Vite + vue-router |
 | Mobil | Flutter 3.24.5 / Dart 3.5.4 |
 
@@ -186,10 +186,12 @@ ile yapılır. Yükleme kuralı: PDF/JPG/PNG/DOC/DOCX, en fazla 10 MB.
 
 ---
 
-## Veritabanı Tabloları
+## Veritabanı Koleksiyonları
 
-| Tablo | İçerik |
-|-------|--------|
+Ayrıntılı şema notları: **[db/README.md](db/README.md)**
+
+| Koleksiyon | İçerik |
+|------------|--------|
 | `users` | Personel: admin, danışman |
 | `owners` | Mal sahipleri (IBAN dahil — kira aktarımı için) |
 | `properties` | Portföy/ilan kayıtları, durum, fiyat, konum, özellikler |

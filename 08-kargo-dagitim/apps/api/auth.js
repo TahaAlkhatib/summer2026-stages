@@ -3,12 +3,17 @@ const jwt = require('jsonwebtoken');
 function tokenUret(kullanici) {
   return jwt.sign(
     {
-      id: kullanici.id,
+      id: kullanici._id.toString(),
       username: kullanici.username,
       role: kullanici.role,
       fullName: kullanici.full_name,
-      branchId: kullanici.branch_id,
-      merchantId: kullanici.merchant_id,
+      // populate edilmiş olabilir; token'a sadece kimliği koyuyoruz
+      branchId: kullanici.branch_id
+        ? (kullanici.branch_id._id || kullanici.branch_id).toString()
+        : null,
+      merchantId: kullanici.merchant_id
+        ? (kullanici.merchant_id._id || kullanici.merchant_id).toString()
+        : null,
     },
     process.env.JWT_SECRET,
     { expiresIn: '12h' }

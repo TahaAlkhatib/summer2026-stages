@@ -1,6 +1,14 @@
 const express = require("express");
-const pool = require("../db");
+const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
+const OrderStatusHistory = require("../models/OrderStatusHistory");
+const CourierTask = require("../models/CourierTask");
+const Payment = require("../models/Payment");
+const Customer = require("../models/Customer");
+const Service = require("../models/Service");
+const User = require("../models/User");
 const { verifyToken } = require("../auth");
+const { gunBasi, gunSonu } = require("../tarih");
 
 const router = express.Router();
 router.use(verifyToken);
@@ -26,87 +34,101 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "Siparişe en az bir hizmet eklenmelidir." });
   }
 
-  const client = await pool.connect();
+  const musteri = await Customer.findById(customer_id).catch(() => null);
+  if (!musteri) {
+    return res.status(400).json({ message: "Müşteri bulunamadı." });
+  }
+
+  // Kalemleri önce doğrula, sonra kaydet. Böylece hatalı bir kalem yüzünden
+  // yarım sipariş oluşmaz. (MongoDB tek sunucu kurulumunda transaction
+  // desteklemediği için doğrulamayı kayıttan önce yapıyoruz.)
+  const hazirKalemler = [];
+  let toplam = 0;
+
+  for (const kalem of items) {
+    const hizmet = await Service.findById(kalem.service_id).catch(() => null);
+    if (!hizmet) {
+      return res.status(400).json({ message: "Seçilen hizmet bulunamadı." });
+    }
+    const adet = Number(kalem.quantity);
+    if (!adet || adet <= 0) {
+      return res.status(400).json({ message: "Miktar sıfırdan büyük olmalıdır." });
+    }
+    const birimFiyat = Number(hizmet.price);
+    const satirToplam = adet * birimFiyat;
+    toplam += satirToplam;
+
+    hazirKalemler.push({
+      service_id: hizmet._id,
+      item_name: kalem.item_name || hizmet.name,
+      quantity: adet,
+      unit_price: birimFiyat,
+      line_total: satirToplam,
+      notes: kalem.notes || null,
+    });
+  }
+
+  let siparis = null;
   try {
-    await client.query("BEGIN");
+    siparis = await Order.create({
+      order_no: await Order.yeniNumara(),
+      customer_id: musteri._id,
+      delivery_type: delivery_type === "kurye" ? "kurye" : "magaza",
+      promised_date: promised_date || null,
+      notes: notes || null,
+      total_amount: toplam,
+      created_by: req.user.id,
+    });
 
-    // Sipariş numarasını üret
-    const yil = new Date().getFullYear();
-    const sayac = await client.query(
-      "SELECT COUNT(*) FROM orders WHERE order_no LIKE $1",
-      ["SP-" + yil + "-%"]
-    );
-    const sira = parseInt(sayac.rows[0].count) + 1;
-    const orderNo = "SP-" + yil + "-" + String(sira).padStart(5, "0");
-
-    const siparis = await client.query(
-      `INSERT INTO orders (order_no, customer_id, delivery_type, promised_date, notes, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, order_no`,
-      [orderNo, customer_id, delivery_type || "magaza", promised_date || null,
-       notes || null, req.user.id]
-    );
-    const orderId = siparis.rows[0].id;
-
-    // Kalemler ve barkodlar
-    let toplam = 0;
     const eklenenKalemler = [];
-    for (let i = 0; i < items.length; i++) {
-      const kalem = items[i];
-      const hizmet = await client.query("SELECT name, price FROM services WHERE id = $1", [kalem.service_id]);
-      if (hizmet.rows.length === 0) {
-        await client.query("ROLLBACK");
-        return res.status(400).json({ message: "Seçilen hizmet bulunamadı." });
-      }
-      const adet = Number(kalem.quantity);
-      if (!adet || adet <= 0) {
-        await client.query("ROLLBACK");
-        return res.status(400).json({ message: "Miktar sıfırdan büyük olmalıdır." });
-      }
-      const birimFiyat = Number(hizmet.rows[0].price);
-      const satirToplam = adet * birimFiyat;
-      toplam += satirToplam;
-
-      const barkod = orderNo + "-" + String(i + 1).padStart(2, "0");
-      const eklenen = await client.query(
-        `INSERT INTO order_items (order_id, service_id, item_name, quantity, unit_price, line_total, barcode, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING id, barcode, item_name, quantity, unit_price, line_total`,
-        [orderId, kalem.service_id, kalem.item_name || hizmet.rows[0].name,
-         adet, birimFiyat, satirToplam, barkod, kalem.notes || null]
-      );
-      eklenenKalemler.push(eklenen.rows[0]);
+    for (let i = 0; i < hazirKalemler.length; i++) {
+      const kalem = await OrderItem.create({
+        ...hazirKalemler[i],
+        order_id: siparis._id,
+        barcode: siparis.order_no + "-" + String(i + 1).padStart(2, "0"),
+      });
+      eklenenKalemler.push(kalem.toJSON());
     }
 
-    await client.query("UPDATE orders SET total_amount = $1 WHERE id = $2", [toplam, orderId]);
-    await client.query(
-      "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES ($1, 'alindi', $2, 'Sipariş oluşturuldu')",
-      [orderId, req.user.id]
-    );
+    await OrderStatusHistory.create({
+      order_id: siparis._id,
+      status: "alindi",
+      changed_by: req.user.id,
+      note: "Sipariş oluşturuldu",
+    });
 
     // Kurye teslimi seçildiyse görev aç
     if (delivery_type === "kurye") {
-      const musteri = await client.query("SELECT address, district FROM customers WHERE id = $1", [customer_id]);
-      const adres = (musteri.rows[0].address || "") + " / " + (musteri.rows[0].district || "");
-      await client.query(
-        `INSERT INTO courier_tasks (order_id, courier_id, task_type, address, scheduled_at)
-         SELECT $1, id, 'teslim', $2, NOW() + interval '1 day' FROM users WHERE role = 'kurye' AND is_active = true LIMIT 1`,
-        [orderId, adres]
-      );
+      const kurye = await User.findOne({ role: "kurye", is_active: true });
+      if (kurye) {
+        const yarin = new Date();
+        yarin.setDate(yarin.getDate() + 1);
+        await CourierTask.create({
+          order_id: siparis._id,
+          courier_id: kurye._id,
+          task_type: "teslim",
+          address: (musteri.address || "") + " / " + (musteri.district || ""),
+          scheduled_at: yarin,
+        });
+      }
     }
 
-    await client.query("COMMIT");
     res.status(201).json({
-      id: orderId,
-      order_no: orderNo,
+      id: siparis._id.toString(),
+      order_no: siparis.order_no,
       total_amount: toplam,
       items: eklenenKalemler,
     });
   } catch (err) {
-    await client.query("ROLLBACK");
     console.error(err);
+    // Yarım kalan kayıtları temizle
+    if (siparis) {
+      await OrderItem.deleteMany({ order_id: siparis._id });
+      await OrderStatusHistory.deleteMany({ order_id: siparis._id });
+      await CourierTask.deleteMany({ order_id: siparis._id });
+      await Order.deleteOne({ _id: siparis._id });
+    }
     res.status(500).json({ message: "Sipariş oluşturulamadı." });
-  } finally {
-    client.release();
   }
 });
 
@@ -114,68 +136,152 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   const { status, q, date } = req.query;
   try {
-    let sql = `SELECT o.id, o.order_no, o.status, o.total_amount, o.paid_amount,
-                      o.delivery_type, o.promised_date, o.created_at,
-                      c.full_name AS customer_name, c.phone AS customer_phone,
-                      (SELECT COUNT(*) FROM order_items i WHERE i.order_id = o.id) AS item_count
-               FROM orders o
-               JOIN customers c ON c.id = o.customer_id
-               WHERE 1 = 1`;
-    const params = [];
-
-    if (status) {
-      params.push(status);
-      sql += " AND o.status = $" + params.length;
-    }
-    if (q) {
-      params.push("%" + q + "%");
-      sql += " AND (o.order_no ILIKE $" + params.length + " OR c.full_name ILIKE $" + params.length + ")";
-    }
+    const filtre = {};
+    if (status) filtre.status = status;
     if (date) {
-      params.push(date);
-      sql += " AND DATE(o.created_at) = $" + params.length;
+      filtre.created_at = { $gte: gunBasi(date), $lt: gunSonu(date) };
     }
-    sql += " ORDER BY o.created_at DESC";
 
-    const result = await pool.query(sql, params);
-    res.json(result.rows);
+    // Arama hem sipariş numarasında hem müşteri adında yapılıyor.
+    // MongoDB'de JOIN olmadığı için önce eşleşen müşterileri buluyoruz.
+    if (q) {
+      const desen = new RegExp(q, "i");
+      const musteriler = await Customer.find({ full_name: desen }).select("_id");
+      filtre.$or = [
+        { order_no: desen },
+        { customer_id: { $in: musteriler.map((m) => m._id) } },
+      ];
+    }
+
+    const siparisler = await Order.find(filtre)
+      .populate("customer_id")
+      .sort({ created_at: -1 });
+
+    const cevap = [];
+    for (const o of siparisler) {
+      const kalemSayisi = await OrderItem.countDocuments({ order_id: o._id });
+      cevap.push({
+        id: o._id.toString(),
+        order_no: o.order_no,
+        status: o.status,
+        total_amount: o.total_amount,
+        paid_amount: o.paid_amount,
+        delivery_type: o.delivery_type,
+        promised_date: o.promised_date,
+        created_at: o.created_at,
+        customer_name: o.customer_id ? o.customer_id.full_name : "",
+        customer_phone: o.customer_id ? o.customer_id.phone : "",
+        item_count: kalemSayisi,
+      });
+    }
+
+    res.json(cevap);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Siparişler getirilemedi." });
   }
 });
 
+// Barkod ile kalem/sipariş bul (kasa uygulaması barkod okutunca kullanır)
+router.get("/barcode/:barcode", async (req, res) => {
+  try {
+    const kalem = await OrderItem.findOne({ barcode: req.params.barcode.trim() });
+    if (!kalem) {
+      return res.status(404).json({ message: "Bu barkoda ait kayıt bulunamadı." });
+    }
+
+    const siparis = await Order.findById(kalem.order_id).populate("customer_id");
+    if (!siparis) {
+      return res.status(404).json({ message: "Bu barkoda ait kayıt bulunamadı." });
+    }
+
+    res.json({
+      order_id: siparis._id.toString(),
+      item_name: kalem.item_name,
+      quantity: kalem.quantity,
+      order_no: siparis.order_no,
+      status: siparis.status,
+      status_label: DURUM_ETIKETLERI[siparis.status],
+      customer_name: siparis.customer_id ? siparis.customer_id.full_name : "",
+      customer_phone: siparis.customer_id ? siparis.customer_id.phone : "",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Barkod sorgulanamadı." });
+  }
+});
+
+// Barkod okutup doğrudan aşama güncelle
+router.put("/barcode/:barcode/status", async (req, res) => {
+  const { status } = req.body;
+  if (!DURUM_ETIKETLERI[status]) {
+    return res.status(400).json({ message: "Geçersiz sipariş durumu." });
+  }
+
+  try {
+    const kalem = await OrderItem.findOne({ barcode: req.params.barcode.trim() });
+    if (!kalem) {
+      return res.status(404).json({ message: "Bu barkoda ait kayıt bulunamadı." });
+    }
+
+    const siparis = await Order.findById(kalem.order_id);
+    if (!siparis) {
+      return res.status(404).json({ message: "Sipariş bulunamadı." });
+    }
+    if (siparis.status === "teslim_edildi") {
+      return res.status(400).json({ message: "Teslim edilmiş sipariş güncellenemez." });
+    }
+
+    siparis.status = status;
+    if (status === "teslim_edildi") siparis.delivered_at = new Date();
+    await siparis.save();
+
+    await OrderStatusHistory.create({
+      order_id: siparis._id,
+      status: status,
+      changed_by: req.user.id,
+      note: "Barkod okutularak güncellendi",
+    });
+
+    res.json({ id: siparis._id.toString(), order_no: siparis.order_no, status: siparis.status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Sipariş durumu güncellenemedi." });
+  }
+});
+
 // Sipariş detayı
 router.get("/:id", async (req, res) => {
   try {
-    const siparis = await pool.query(
-      `SELECT o.*, u.full_name AS created_by_name
-       FROM orders o LEFT JOIN users u ON u.id = o.created_by
-       WHERE o.id = $1`,
-      [req.params.id]
-    );
-    if (siparis.rows.length === 0) {
+    const siparis = await Order.findById(req.params.id).populate("created_by");
+    if (!siparis) {
       return res.status(404).json({ message: "Sipariş bulunamadı." });
     }
 
-    const cevap = siparis.rows[0];
-    const musteri = await pool.query("SELECT * FROM customers WHERE id = $1", [cevap.customer_id]);
-    const kalemler = await pool.query("SELECT * FROM order_items WHERE order_id = $1 ORDER BY id", [req.params.id]);
-    const gecmis = await pool.query(
-      `SELECT h.*, u.full_name AS changed_by_name
-       FROM order_status_history h LEFT JOIN users u ON u.id = h.changed_by
-       WHERE h.order_id = $1 ORDER BY h.changed_at`,
-      [req.params.id]
-    );
-    const odemeler = await pool.query("SELECT * FROM payments WHERE order_id = $1 ORDER BY created_at", [req.params.id]);
-    const gorev = await pool.query("SELECT * FROM courier_tasks WHERE order_id = $1 ORDER BY id DESC LIMIT 1", [req.params.id]);
+    const musteri = await Customer.findById(siparis.customer_id);
+    const kalemler = await OrderItem.find({ order_id: siparis._id });
+    const gecmis = await OrderStatusHistory.find({ order_id: siparis._id })
+      .populate("changed_by")
+      .sort({ changed_at: 1 });
+    const odemeler = await Payment.find({ order_id: siparis._id }).sort({ created_at: 1 });
+    const gorev = await CourierTask.findOne({ order_id: siparis._id }).sort({ _id: -1 });
 
-    cevap.status_label = DURUM_ETIKETLERI[cevap.status];
-    cevap.customer = musteri.rows[0];
-    cevap.items = kalemler.rows;
-    cevap.history = gecmis.rows;
-    cevap.payments = odemeler.rows;
-    cevap.courier_task = gorev.rows[0] || null;
+    const cevap = siparis.toJSON();
+    cevap.created_by_name = siparis.created_by ? siparis.created_by.full_name : null;
+    cevap.created_by = siparis.created_by ? siparis.created_by._id.toString() : null;
+    cevap.customer_id = siparis.customer_id ? siparis.customer_id.toString() : null;
+    cevap.status_label = DURUM_ETIKETLERI[siparis.status];
+    cevap.customer = musteri ? musteri.toJSON() : null;
+    cevap.items = kalemler.map((k) => k.toJSON());
+    cevap.history = gecmis.map((h) => {
+      const satir = h.toJSON();
+      satir.changed_by_name = h.changed_by ? h.changed_by.full_name : null;
+      satir.changed_by = h.changed_by ? h.changed_by._id.toString() : null;
+      return satir;
+    });
+    cevap.payments = odemeler.map((o) => o.toJSON());
+    cevap.courier_task = gorev ? gorev.toJSON() : null;
+
     res.json(cevap);
   } catch (err) {
     console.error(err);
@@ -192,88 +298,26 @@ router.put("/:id/status", async (req, res) => {
   }
 
   try {
-    const mevcut = await pool.query("SELECT status FROM orders WHERE id = $1", [req.params.id]);
-    if (mevcut.rows.length === 0) {
+    const siparis = await Order.findById(req.params.id);
+    if (!siparis) {
       return res.status(404).json({ message: "Sipariş bulunamadı." });
     }
-    if (mevcut.rows[0].status === "teslim_edildi") {
+    if (siparis.status === "teslim_edildi") {
       return res.status(400).json({ message: "Teslim edilmiş sipariş güncellenemez." });
     }
 
-    // delivered_at'i JS tarafinda hesapliyoruz; ayni parametreyi hem kolonda hem
-    // CASE icinde kullanmak PostgreSQL'de tip cakismasina yol aciyor
-    const teslimTarihi = status === "teslim_edildi" ? new Date() : null;
+    siparis.status = status;
+    if (status === "teslim_edildi") siparis.delivered_at = new Date();
+    await siparis.save();
 
-    const result = await pool.query(
-      `UPDATE orders SET status = $1, delivered_at = COALESCE($2, delivered_at)
-       WHERE id = $3 RETURNING id, order_no, status`,
-      [status, teslimTarihi, req.params.id]
-    );
-    await pool.query(
-      "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES ($1, $2, $3, $4)",
-      [req.params.id, status, req.user.id, note || null]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Sipariş durumu güncellenemedi." });
-  }
-});
+    await OrderStatusHistory.create({
+      order_id: siparis._id,
+      status: status,
+      changed_by: req.user.id,
+      note: note || null,
+    });
 
-// Barkod ile kalem/sipariş bul (kasa uygulaması barkod okutunca kullanır)
-router.get("/barcode/:barcode", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT i.order_id, i.item_name, i.quantity, o.order_no, o.status,
-              c.full_name AS customer_name, c.phone AS customer_phone
-       FROM order_items i
-       JOIN orders o ON o.id = i.order_id
-       JOIN customers c ON c.id = o.customer_id
-       WHERE i.barcode = $1`,
-      [req.params.barcode]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Bu barkoda ait kayıt bulunamadı." });
-    }
-    const kayit = result.rows[0];
-    kayit.status_label = DURUM_ETIKETLERI[kayit.status];
-    res.json(kayit);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Barkod sorgulanamadı." });
-  }
-});
-
-// Barkod okutup doğrudan aşama güncelle
-router.put("/barcode/:barcode/status", async (req, res) => {
-  const { status } = req.body;
-  if (!DURUM_ETIKETLERI[status]) {
-    return res.status(400).json({ message: "Geçersiz sipariş durumu." });
-  }
-  try {
-    const kalem = await pool.query("SELECT order_id FROM order_items WHERE barcode = $1", [req.params.barcode]);
-    if (kalem.rows.length === 0) {
-      return res.status(404).json({ message: "Bu barkoda ait kayıt bulunamadı." });
-    }
-    const orderId = kalem.rows[0].order_id;
-
-    const mevcut = await pool.query("SELECT status FROM orders WHERE id = $1", [orderId]);
-    if (mevcut.rows[0].status === "teslim_edildi") {
-      return res.status(400).json({ message: "Teslim edilmiş sipariş güncellenemez." });
-    }
-
-    const teslimTarihi = status === "teslim_edildi" ? new Date() : null;
-
-    const result = await pool.query(
-      `UPDATE orders SET status = $1, delivered_at = COALESCE($2, delivered_at)
-       WHERE id = $3 RETURNING id, order_no, status`,
-      [status, teslimTarihi, orderId]
-    );
-    await pool.query(
-      "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES ($1, $2, $3, 'Barkod okutularak güncellendi')",
-      [orderId, status, req.user.id]
-    );
-    res.json(result.rows[0]);
+    res.json({ id: siparis._id.toString(), order_no: siparis.order_no, status: siparis.status });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Sipariş durumu güncellenemedi." });

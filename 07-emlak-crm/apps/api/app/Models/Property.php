@@ -2,12 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
+use MongoDB\Laravel\Relations\HasMany;
 
 class Property extends Model
 {
+    // MongoDB'de kolon varsayilan degeri (DEFAULT) yoktur. Eloquent'in
+    // $attributes dizisi yeni kayitlara bu degerleri kendisi ekler.
+    protected $attributes = [
+        'city' => 'İstanbul',
+        'status' => 'aktif',
+        'is_furnished' => false,
+        'has_elevator' => false,
+        'has_parking' => false,
+        'dues' => 0,
+    ];
+
     protected $fillable = [
         'code', 'title', 'listing_type', 'property_type', 'city', 'district',
         'neighborhood', 'address', 'room_count', 'gross_area', 'floor',
@@ -18,8 +29,9 @@ class Property extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
-            'dues' => 'decimal:2',
+            // Tutarlar MongoDB'de sayi olarak saklanir (bkz. db/README.md)
+            'price' => 'float',
+            'dues' => 'float',
             'is_furnished' => 'boolean',
             'has_elevator' => 'boolean',
             'has_parking' => 'boolean',

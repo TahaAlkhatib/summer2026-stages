@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
+const { baglan } = require('./db');
+
 const app = express();
 app.use(cors());
 // İmza görüntüleri base64 olarak geldiği için gövde sınırını yükseltiyoruz
@@ -23,6 +25,15 @@ app.use((hata, req, res, next) => {
 });
 
 const port = process.env.PORT || 3108;
-app.listen(port, () => {
-  console.log(`API çalışıyor: http://localhost:${port}`);
-});
+
+// Önce veritabanına bağlan, sonra sunucuyu başlat
+baglan()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`API çalışıyor: http://localhost:${port}`);
+    });
+  })
+  .catch((hata) => {
+    console.error('MongoDB bağlantısı kurulamadı:', hata.message);
+    process.exit(1);
+  });

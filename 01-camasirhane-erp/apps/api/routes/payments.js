@@ -1,5 +1,6 @@
 const express = require("express");
-const pool = require("../db");
+const Order = require("../models/Order");
+const Payment = require("../models/Payment");
 const { verifyToken } = require("../auth");
 
 const router = express.Router();
@@ -21,36 +22,40 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const siparis = await pool.query("SELECT total_amount, paid_amount FROM orders WHERE id = $1", [order_id]);
-    if (siparis.rows.length === 0) {
+    const siparis = await Order.findById(order_id).catch(() => null);
+    if (!siparis) {
       return res.status(404).json({ message: "Sipariş bulunamadı." });
     }
 
-    const kalan = Number(siparis.rows[0].total_amount) - Number(siparis.rows[0].paid_amount);
+    const kalan = Number(siparis.total_amount) - Number(siparis.paid_amount);
     if (tutar > kalan) {
-      return res.status(400).json({ message: "Ödeme tutarı kalan borçtan fazla olamaz. Kalan: " + kalan.toFixed(2) + " ₺" });
+      return res.status(400).json({
+        message: "Ödeme tutarı kalan borçtan fazla olamaz. Kalan: " + kalan.toFixed(2) + " ₺",
+      });
     }
 
-    const odeme = await pool.query(
-      "INSERT INTO payments (order_id, amount, method, received_by) VALUES ($1, $2, $3, $4) RETURNING *",
-      [order_id, tutar, method, req.user.id]
-    );
+    const odeme = await Payment.create({
+      order_id: siparis._id,
+      amount: tutar,
+      method: method,
+      received_by: req.user.id,
+    });
 
-    const guncel = await pool.query(
-      `UPDATE orders
-       SET paid_amount = (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE order_id = $1)
-       WHERE id = $1 RETURNING id, total_amount, paid_amount`,
-      [order_id]
-    );
+    // Ödenen tutarı ödemelerin toplamından yeniden hesaplıyoruz
+    const odemeler = await Payment.find({ order_id: siparis._id });
+    let odenen = 0;
+    odemeler.forEach((o) => (odenen += Number(o.amount)));
 
-    const o = guncel.rows[0];
+    siparis.paid_amount = odenen;
+    await siparis.save();
+
     res.status(201).json({
-      payment: odeme.rows[0],
+      payment: odeme.toJSON(),
       order: {
-        id: o.id,
-        total_amount: Number(o.total_amount),
-        paid_amount: Number(o.paid_amount),
-        remaining: Number(o.total_amount) - Number(o.paid_amount),
+        id: siparis._id.toString(),
+        total_amount: Number(siparis.total_amount),
+        paid_amount: odenen,
+        remaining: Number(siparis.total_amount) - odenen,
       },
     });
   } catch (err) {

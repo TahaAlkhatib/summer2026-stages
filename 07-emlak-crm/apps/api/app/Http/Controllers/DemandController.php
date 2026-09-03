@@ -57,6 +57,16 @@ class DemandController extends Controller
 
         $veri['status'] = 'aktif';
 
+        // MongoDB gelen değeri olduğu gibi saklar; sayısal alanları çeviriyoruz
+        foreach (['min_price', 'max_price'] as $alan) {
+            if (isset($veri[$alan])) {
+                $veri[$alan] = (float) $veri[$alan];
+            }
+        }
+        if (isset($veri['min_area'])) {
+            $veri['min_area'] = (int) $veri['min_area'];
+        }
+
         return response()->json(Demand::create($veri)->load('customer'), 201);
     }
 

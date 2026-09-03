@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 class Appointment extends Model
 {
+    // MongoDB'de kolon varsayilan degeri (DEFAULT) yoktur. Eloquent'in
+    // $attributes dizisi yeni kayitlara bu degerleri kendisi ekler.
+    protected $attributes = [
+        'status' => 'planlandi',
+    ];
+
     protected $fillable = [
         'property_id', 'customer_id', 'agent_id', 'scheduled_at',
         'status', 'interest_level', 'result_note',

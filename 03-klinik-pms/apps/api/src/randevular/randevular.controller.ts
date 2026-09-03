@@ -1,11 +1,15 @@
 import {
   BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Put, Query, Req, UseGuards,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Not, Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { Appointment, Doctor, Patient } from '../entities';
+import {
+  Appointment, AppointmentDocument, Doctor, DoctorDocument,
+  Patient, PatientDocument, User, UserDocument,
+} from '../schemas';
 import { JwtGuard } from '../auth/jwt.guard';
+import { gunBasi, gunSonu } from '../tarih';
 
 // Randevu durumları
 const DURUMLAR = ['planlandi', 'geldi', 'tamamlandi', 'iptal', 'gelmedi'];
@@ -14,9 +18,10 @@ const DURUMLAR = ['planlandi', 'geldi', 'tamamlandi', 'iptal', 'gelmedi'];
 @UseGuards(JwtGuard)
 export class RandevularController {
   constructor(
-    @InjectRepository(Appointment) private randevular: Repository<Appointment>,
-    @InjectRepository(Doctor) private doktorlar: Repository<Doctor>,
-    @InjectRepository(Patient) private hastalar: Repository<Patient>,
+    @InjectModel(Appointment.name) private randevular: Model<AppointmentDocument>,
+    @InjectModel(Doctor.name) private doktorlar: Model<DoctorDocument>,
+    @InjectModel(Patient.name) private hastalar: Model<PatientDocument>,
+    @InjectModel(User.name) private kullanicilar: Model<UserDocument>,
   ) {}
 
   // Randevu listesi — tarih, doktor ve durum filtreli
@@ -30,48 +35,57 @@ export class RandevularController {
     const kosul: any = {};
 
     if (tarih) {
-      const gun = new Date(tarih + 'T00:00:00');
-      const gunSonu = new Date(gun);
-      gunSonu.setDate(gunSonu.getDate() + 1);
-      kosul.startsAt = Between(gun, gunSonu);
+      kosul.startsAt = { $gte: gunBasi(tarih), $lt: gunSonu(tarih) };
     }
-    if (doktorId) kosul.doctorId = Number(doktorId);
+    if (doktorId) kosul.doctorId = doktorId;
     if (durum) kosul.status = durum;
-    if (hastaId) kosul.patientId = Number(hastaId);
+    if (hastaId) kosul.patientId = hastaId;
 
-    const liste = await this.randevular.find({
-      where: kosul,
-      relations: { patient: true, doctor: { user: true } },
-      order: { startsAt: 'ASC' },
-    });
+    const liste = await this.randevular.find(kosul).sort({ startsAt: 1 });
 
-    return liste.map((r) => ({
-      id: r.id,
-      starts_at: r.startsAt,
-      duration_minutes: r.durationMinutes,
-      status: r.status,
-      note: r.note,
-      patient_id: r.patientId,
-      patient_name: r.patient?.fullName,
-      patient_phone: r.patient?.phone,
-      national_id: r.patient?.nationalId,
-      doctor_id: r.doctorId,
-      doctor_name: r.doctor?.user?.fullName,
-      branch: r.doctor?.branch,
-      examination_fee: Number(r.doctor?.examinationFee || 0),
-    }));
+    const cevap = [];
+    for (const r of liste) {
+      const hasta = await this.hastalar.findById(r.patientId);
+      const doktor = await this.doktorlar.findById(r.doctorId);
+      const doktorKullanici = doktor ? await this.kullanicilar.findById(doktor.userId) : null;
+
+      cevap.push({
+        id: r._id.toString(),
+        starts_at: r.startsAt,
+        duration_minutes: r.durationMinutes,
+        status: r.status,
+        note: r.note,
+        patient_id: r.patientId?.toString(),
+        patient_name: hasta?.fullName,
+        patient_phone: hasta?.phone,
+        national_id: hasta?.nationalId,
+        doctor_id: r.doctorId?.toString(),
+        doctor_name: doktorKullanici?.fullName,
+        branch: doktor?.branch,
+        examination_fee: Number(doktor?.examinationFee || 0),
+      });
+    }
+
+    return cevap;
   }
 
   @Get(':id')
-  async getir(@Param('id') id: number) {
-    const randevu = await this.randevular.findOne({
-      where: { id },
-      relations: { patient: true, doctor: { user: true } },
-    });
+  async getir(@Param('id') id: string) {
+    const randevu = await this.randevular.findById(id).catch(() => null);
     if (!randevu) {
       throw new NotFoundException({ message: 'Randevu bulunamadı.' });
     }
-    return randevu;
+
+    const hasta = await this.hastalar.findById(randevu.patientId);
+    const doktor = await this.doktorlar.findById(randevu.doctorId);
+    const doktorKullanici = doktor ? await this.kullanicilar.findById(doktor.userId) : null;
+
+    const cevap: any = randevu.toJSON();
+    cevap.patient = hasta ? hasta.toJSON() : null;
+    cevap.doctor = doktor
+      ? { ...doktor.toJSON(), user: doktorKullanici ? doktorKullanici.toJSON() : null }
+      : null;
+    return cevap;
   }
 
   // Yeni randevu — aynı doktor ve saatte başka randevu varsa engellenir
@@ -83,11 +97,11 @@ export class RandevularController {
       });
     }
 
-    const hasta = await this.hastalar.findOne({ where: { id: govde.patientId } });
+    const hasta = await this.hastalar.findById(govde.patientId).catch(() => null);
     if (!hasta) {
       throw new BadRequestException({ message: 'Hasta bulunamadı.' });
     }
-    const doktor = await this.doktorlar.findOne({ where: { id: govde.doctorId } });
+    const doktor = await this.doktorlar.findById(govde.doctorId).catch(() => null);
     if (!doktor) {
       throw new BadRequestException({ message: 'Doktor bulunamadı.' });
     }
@@ -99,11 +113,9 @@ export class RandevularController {
 
     // Aynı doktorun aynı saatinde iptal edilmemiş randevu var mı
     const cakisma = await this.randevular.findOne({
-      where: {
-        doctorId: govde.doctorId,
-        startsAt: baslangic,
-        status: Not('iptal'),
-      },
+      doctorId: doktor._id,
+      startsAt: baslangic,
+      status: { $ne: 'iptal' },
     });
     if (cakisma) {
       throw new BadRequestException({
@@ -111,28 +123,27 @@ export class RandevularController {
       });
     }
 
-    const randevu = this.randevular.create({
-      patientId: govde.patientId,
-      doctorId: govde.doctorId,
+    const randevu = await this.randevular.create({
+      patientId: hasta._id,
+      doctorId: doktor._id,
       startsAt: baslangic,
       durationMinutes: govde.durationMinutes || 20,
       note: govde.note,
       status: 'planlandi',
       createdById: istek.user?.id,
     });
-    await this.randevular.save(randevu);
 
-    return { id: randevu.id, starts_at: randevu.startsAt, status: randevu.status };
+    return { id: randevu._id.toString(), starts_at: randevu.startsAt, status: randevu.status };
   }
 
   // Durum güncelleme — resepsiyon check-in için de kullanılır
   @Put(':id/status')
-  async durumGuncelle(@Param('id') id: number, @Body() govde: { status: string }) {
+  async durumGuncelle(@Param('id') id: string, @Body() govde: { status: string }) {
     if (!DURUMLAR.includes(govde.status)) {
       throw new BadRequestException({ message: 'Geçersiz randevu durumu.' });
     }
 
-    const randevu = await this.randevular.findOne({ where: { id } });
+    const randevu = await this.randevular.findById(id).catch(() => null);
     if (!randevu) {
       throw new NotFoundException({ message: 'Randevu bulunamadı.' });
     }
@@ -143,7 +154,7 @@ export class RandevularController {
     }
 
     randevu.status = govde.status;
-    await this.randevular.save(randevu);
-    return { id: randevu.id, status: randevu.status };
+    await randevu.save();
+    return { id: randevu._id.toString(), status: randevu.status };
   }
 }

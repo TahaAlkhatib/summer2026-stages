@@ -9,7 +9,7 @@ Bu dosya projeyi **sıfırdan bir bilgisayarda** çalıştırmak için gereken t
 | Program | Sürüm | Nereden indirilir | Hangi uygulama için |
 |---------|-------|-------------------|---------------------|
 | **Node.js** | 20+ | https://nodejs.org | API, Web, Resepsiyon |
-| **PostgreSQL** | 16+ | https://www.postgresql.org/download/ | Veritabanı |
+| **MongoDB** | 4.4+ | https://www.mongodb.com/try/download/community | Veritabanı |
 | **Flutter** | **3.24.5** | https://docs.flutter.dev/get-started/install | Hasta uygulaması |
 | **Android Studio** | güncel | https://developer.android.com/studio | Emülatör |
 
@@ -17,7 +17,7 @@ Kontrol:
 
 ```bash
 node --version      # v20 veya üzeri
-psql --version      # 16.x
+mongod --version    # 4.4 veya üzeri
 flutter --version   # 3.24.5
 ```
 
@@ -33,16 +33,30 @@ flutter --version   # 3.24.5
 
 ## 2. Veritabanını Hazırlama
 
+MongoDB'de **elle veritabanı veya tablo oluşturmak gerekmez.** Servisin
+çalışıyor olması yeterli:
+
 ```bash
-psql postgres -c "CREATE ROLE clinic_user WITH LOGIN PASSWORD 'clinic123';"
-psql postgres -c "CREATE DATABASE clinic_db OWNER clinic_user;"
+# macOS (Homebrew)
+brew services start mongodb-community
+
+# Windows: MongoDB servisi kurulumdan sonra otomatik başlar
+# Linux
+sudo systemctl start mongod
 ```
 
-> Tablolar **elle oluşturulmaz.** API ilk açılışta TypeORM ile şemayı kendisi
-> oluşturur ve Türkçe demo verisini yükler.
+Bağlantıyı kontrol etmek için:
 
-> ⚠️ Veritabanı **UTF-8** kodlaması ve **C dışında** bir dil ayarı ile kurulmalıdır,
-> aksi hâlde "Şahin", "Doğan" gibi Türkçe aramalar sonuç döndürmez.
+```bash
+mongo --eval "db.version()"      # MongoDB 4.x
+mongosh --eval "db.version()"    # MongoDB 5+
+```
+
+> API ilk açılışta `clinic_db` veritabanını ve koleksiyonları kendisi
+> oluşturur, ardından Türkçe demo verisini yükler.
+
+> Bağlantı adresi `apps/api/.env` içindeki `MONGO_URL` değişkenindedir
+> (varsayılan: `mongodb://localhost:27017/clinic_db`).
 
 ---
 
@@ -149,7 +163,7 @@ Hastalar personel değildir; **TC kimlik numarası + telefonun son 4 hanesi** il
 
 | # | Terminal | Komut | Adres |
 |---|----------|-------|-------|
-| 1 | — | PostgreSQL servisinin çalıştığından emin olun | `localhost:5432` |
+| 1 | — | MongoDB servisinin çalıştığından emin olun | `localhost:27017` |
 | 2 | 1. terminal | `cd apps/api && npm run start:prod` | http://localhost:3103 |
 | 3 | 2. terminal | `cd apps/web && npm run dev` | http://localhost:5103 |
 | 4 | 3. terminal | `cd apps/reception-desktop && npm start` | masaüstü penceresi |
@@ -163,10 +177,9 @@ Hastalar personel değildir; **TC kimlik numarası + telefonun son 4 hanesi** il
 
 | Sorun | Çözüm |
 |-------|-------|
-| `password authentication failed for user "clinic_user"` | 2. adımdaki rol oluşturma komutunu çalıştırın. |
-| `database "clinic_db" does not exist` | 2. adımdaki veritabanı oluşturma komutunu çalıştırın. |
-| API açılıyor ama tablo yok | `synchronize: true` ilk açılışta tabloları kurar; logda hata var mı bakın. |
-| Demo verisi gelmedi | Veritabanında zaten kullanıcı varsa seed çalışmaz. Sıfırlamak için tabloları silip API'yi yeniden başlatın. |
+| `MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017` | MongoDB servisi kapalı. 2. adımdaki komutu çalıştırın. |
+| API açılıyor ama koleksiyon yok | Koleksiyonlar ilk kayıtta oluşur; demo verisi yüklendi mi diye logda `Demo verisi yüklendi.` satırını arayın. |
+| Demo verisi gelmedi | `users` koleksiyonunda kayıt varsa seed çalışmaz. Sıfırlamak için `mongo clinic_db --eval "db.dropDatabase()"` (MongoDB 5+ için `mongosh`) çalıştırıp API'yi yeniden başlatın. |
 | Web/resepsiyon boş geliyor | API kapalı. Tarayıcıda F12 → Console'a bakın. |
 | Electron penceresi açılmıyor | `npm start` önce `vite build` çalıştırır; `dist/` klasörü oluştu mu kontrol edin. |
 | Mobilde "Sunucuya bağlanılamadı" | `lib/api.dart` içindeki adres yanlış. 6. adımdaki nota bakın. |

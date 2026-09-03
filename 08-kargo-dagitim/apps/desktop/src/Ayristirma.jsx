@@ -63,8 +63,9 @@ export default function Ayristirma() {
     try {
       const irsaliye = await api.post('/manifests', {
         type: irsaliyeTipi,
-        courierId: irsaliyeTipi === 'kurye_dagitim' ? Number(kuryeId) : null,
-        destBranchId: irsaliyeTipi === 'sube_sevk' ? Number(hedefSubeId) : null,
+        // MongoDB kimlikleri metin olduğu için sayıya çevirmiyoruz
+        courierId: irsaliyeTipi === 'kurye_dagitim' ? kuryeId : null,
+        destBranchId: irsaliyeTipi === 'sube_sevk' ? hedefSubeId : null,
         shipmentIds: secilenler,
       })
       setBilgi(`${irsaliye.code} irsaliyesi oluşturuldu (${irsaliye.item_count} gönderi). ` +

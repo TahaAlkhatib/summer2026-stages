@@ -39,7 +39,7 @@
                 }
 
                 ApiClient.Token = ApiClient.Metin(cevap, "token");
-                ApiClient.UserId = ApiClient.Tam(kullanici, "id");
+                ApiClient.UserId = ApiClient.Metin(kullanici, "id");
                 ApiClient.UserName = ApiClient.Metin(kullanici, "full_name");
                 ApiClient.Role = rol;
 

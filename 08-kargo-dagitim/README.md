@@ -13,7 +13,7 @@ tacir portalında takip.
 
 ```
                         ┌──────────────────────────┐
-                        │   PostgreSQL             │
+                        │   MongoDB (yerel)        │
                         │   courier_db             │
                         └────────────┬─────────────┘
                                      │
@@ -38,8 +38,8 @@ tacir portalında takip.
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Veritabanı | PostgreSQL (UTF-8) |
-| API | Node.js + Express 5, `pg`, JWT, bcryptjs |
+| Veritabanı | MongoDB 4.4+ (yerel kurulum), Mongoose 9 |
+| API | Node.js + Express 5, Mongoose, JWT, bcryptjs |
 | Masaüstü | Electron 44 + React 19 + Vite |
 | Web | React 19 + Vite |
 | Mobil | React Native / Expo SDK 57, react-native-svg |
@@ -186,17 +186,23 @@ gönderinin nerede olduğunu görür.
 
 ---
 
-## Veritabanı Tabloları
+## Veritabanı (MongoDB)
 
-| Tablo | İçerik |
-|-------|--------|
+Alan tanımları `apps/api/models/` klasöründeki Mongoose şemalarındadır.
+Ayrıntılı açıklama: [`db/README.md`](db/README.md)
+
+| Koleksiyon | İçerik |
+|------------|--------|
 | `branches` | Şubeler ve hizmet verdikleri ilçeler |
 | `merchants` | Tacirler, anlaşmalı fiyat ve komisyon oranı |
 | `users` | Personel (admin, operasyon, kurye) ve tacir kullanıcıları |
 | `shipments` | Gönderiler: barkod, alıcı, ücret, kapıda ödeme, durum, OTP, imza |
-| `shipment_events` | Hareket geçmişi |
-| `manifests` / `manifest_items` | Sevk ve dağıtım irsaliyeleri |
-| `cod_collections` | Kapıda ödeme tahsilatları |
+| `shipmentevents` | Hareket geçmişi |
+| `manifests` | Sevk ve dağıtım irsaliyeleri (gönderiler `items` dizisinde) |
+| `codcollections` | Kapıda ödeme tahsilatları |
+
+İlişkisel tasarımdaki `manifest_items` ara tablosuna gerek kalmadı;
+irsaliyeye ait gönderi kimlikleri belgenin içinde bir dizide tutuluyor.
 
 ---
 

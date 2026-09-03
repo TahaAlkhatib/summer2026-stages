@@ -1,5 +1,8 @@
 const express = require("express");
-const pool = require("../db");
+const CourierTask = require("../models/CourierTask");
+const Order = require("../models/Order");
+const Customer = require("../models/Customer");
+const OrderStatusHistory = require("../models/OrderStatusHistory");
 const { verifyToken } = require("../auth");
 
 const router = express.Router();
@@ -10,27 +13,35 @@ const GOREV_ETIKETLERI = { alma: "Alma", teslim: "Teslim" };
 // Kurye görev listesi
 router.get("/tasks", async (req, res) => {
   try {
-    let sql = `SELECT t.*, o.order_no, o.total_amount, o.paid_amount,
-                      c.full_name AS customer_name, c.phone AS customer_phone
-               FROM courier_tasks t
-               JOIN orders o ON o.id = t.order_id
-               JOIN customers c ON c.id = o.customer_id
-               WHERE 1 = 1`;
-    const params = [];
-
+    const filtre = {};
     // Kurye sadece kendi görevlerini görür
     if (req.user.role === "kurye") {
-      params.push(req.user.id);
-      sql += " AND t.courier_id = $" + params.length;
+      filtre.courier_id = req.user.id;
     }
     if (req.query.status) {
-      params.push(req.query.status);
-      sql += " AND t.status = $" + params.length;
+      filtre.status = req.query.status;
     }
-    sql += " ORDER BY t.scheduled_at";
 
-    const result = await pool.query(sql, params);
-    res.json(result.rows.map((g) => ({ ...g, task_type_label: GOREV_ETIKETLERI[g.task_type] })));
+    const gorevler = await CourierTask.find(filtre).sort({ scheduled_at: 1 });
+
+    const cevap = [];
+    for (const g of gorevler) {
+      const siparis = await Order.findById(g.order_id);
+      const musteri = siparis ? await Customer.findById(siparis.customer_id) : null;
+
+      const satir = g.toJSON();
+      satir.order_id = g.order_id ? g.order_id.toString() : null;
+      satir.courier_id = g.courier_id ? g.courier_id.toString() : null;
+      satir.task_type_label = GOREV_ETIKETLERI[g.task_type];
+      satir.order_no = siparis ? siparis.order_no : "";
+      satir.total_amount = siparis ? siparis.total_amount : 0;
+      satir.paid_amount = siparis ? siparis.paid_amount : 0;
+      satir.customer_name = musteri ? musteri.full_name : "";
+      satir.customer_phone = musteri ? musteri.phone : "";
+      cevap.push(satir);
+    }
+
+    res.json(cevap);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Görevler getirilemedi." });
@@ -45,35 +56,37 @@ router.put("/tasks/:id/status", async (req, res) => {
   }
 
   try {
-    const gorev = await pool.query("SELECT * FROM courier_tasks WHERE id = $1", [req.params.id]);
-    if (gorev.rows.length === 0) {
+    const gorev = await CourierTask.findById(req.params.id).catch(() => null);
+    if (!gorev) {
       return res.status(404).json({ message: "Görev bulunamadı." });
     }
-    if (req.user.role === "kurye" && gorev.rows[0].courier_id !== req.user.id) {
+    if (req.user.role === "kurye" && gorev.courier_id.toString() !== req.user.id) {
       return res.status(403).json({ message: "Bu görev size ait değil." });
     }
 
-    const tamamlanmaTarihi = status === "tamamlandi" ? new Date() : null;
-    const guncel = await pool.query(
-      `UPDATE courier_tasks
-       SET status = $1, note = $2, completed_at = COALESCE($3, completed_at)
-       WHERE id = $4 RETURNING *`,
-      [status, note || gorev.rows[0].note, tamamlanmaTarihi, req.params.id]
-    );
+    gorev.status = status;
+    if (note) gorev.note = note;
+    if (status === "tamamlandi") gorev.completed_at = new Date();
+    await gorev.save();
 
     // Teslim görevi tamamlandıysa siparişi de teslim edildi yap
-    if (status === "tamamlandi" && gorev.rows[0].task_type === "teslim") {
-      await pool.query(
-        "UPDATE orders SET status = 'teslim_edildi', delivered_at = NOW() WHERE id = $1",
-        [gorev.rows[0].order_id]
-      );
-      await pool.query(
-        "INSERT INTO order_status_history (order_id, status, changed_by, note) VALUES ($1, 'teslim_edildi', $2, 'Kurye teslim etti')",
-        [gorev.rows[0].order_id, req.user.id]
-      );
+    if (status === "tamamlandi" && gorev.task_type === "teslim") {
+      await Order.findByIdAndUpdate(gorev.order_id, {
+        status: "teslim_edildi",
+        delivered_at: new Date(),
+      });
+      await OrderStatusHistory.create({
+        order_id: gorev.order_id,
+        status: "teslim_edildi",
+        changed_by: req.user.id,
+        note: "Kurye teslim etti",
+      });
     }
 
-    res.json(guncel.rows[0]);
+    const cevap = gorev.toJSON();
+    cevap.order_id = gorev.order_id.toString();
+    cevap.courier_id = gorev.courier_id.toString();
+    res.json(cevap);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Görev güncellenemedi." });

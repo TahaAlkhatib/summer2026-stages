@@ -12,7 +12,7 @@ Başlamadan önce bilgisayarınızda şunlar kurulu olmalı:
 | Program | Sürüm | Nereden indirilir | Hangi uygulama için |
 |---------|-------|-------------------|---------------------|
 | **Node.js** | 20 veya üzeri | https://nodejs.org | API, Web Paneli, Mobil |
-| **PostgreSQL** | 16 veya üzeri | https://www.postgresql.org/download/ | Veritabanı |
+| **MongoDB** | 4.4 veya üzeri | https://www.mongodb.com/try/download/community | Veritabanı |
 | **Android Studio** | güncel | https://developer.android.com/studio | Mobil uygulama (emülatör) |
 | **.NET SDK** | 8 veya üzeri | https://dotnet.microsoft.com/download | Kasa uygulaması (**sadece Windows**) |
 
@@ -20,41 +20,54 @@ Kurulumdan sonra kontrol edin:
 
 ```bash
 node --version      # v20.x veya üzeri
-psql --version      # 16.x veya üzeri
+mongod --version    # 4.4 veya üzeri
 ```
+
+> **MongoDB kurulumu.** Windows'ta MongoDB Community Server kurulumu servisi
+> otomatik başlatır. macOS'ta Homebrew ile:
+> ```bash
+> brew tap mongodb/brew
+> brew install mongodb-community
+> brew services start mongodb-community
+> ```
 
 ---
 
 ## 2. Veritabanını Hazırlama
 
-### 2.1. Veritabanı ve kullanıcıyı oluşturun
-
-PostgreSQL kurulduktan sonra terminalde:
+### 2.1. MongoDB servisinin çalıştığını doğrulayın
 
 ```bash
-psql postgres -c "CREATE ROLE laundry_user WITH LOGIN PASSWORD 'laundry123';"
-psql postgres -c "CREATE DATABASE laundry_erp OWNER laundry_user;"
+# macOS
+brew services list | grep mongodb
+
+# Windows (PowerShell)
+Get-Service MongoDB
 ```
 
-> **Windows'ta** `psql` komutu çalışmazsa, "SQL Shell (psql)" programını Başlat menüsünden açın.
-
-### 2.2. Tabloları oluşturun
-
-Proje klasöründe:
+Bağlantı kontrolü:
 
 ```bash
-psql -h localhost -U laundry_user -d laundry_erp -f db/schema.sql
+mongosh --eval "db.version()"     # eski sürümlerde: mongo --eval "db.version()"
 ```
 
-Şifre sorulduğunda: `laundry123`
+### 2.2. Veritabanı ve koleksiyonlar
 
-Bu komut 8 tablo oluşturur: `users`, `customers`, `services`, `orders`,
-`order_items`, `order_status_history`, `courier_tasks`, `payments`.
+**Elle bir şey oluşturmanıza gerek yok.** MongoDB ilk kayıt eklendiğinde
+`laundry_erp` veritabanını ve koleksiyonları kendisi oluşturur.
 
-> ⚠️ **Önemli:** Veritabanı **UTF-8** kodlaması ve **C dışında** bir dil ayarı (locale)
-> ile kurulmalıdır. `C` locale kullanılırsa "Şahin", "Öztürk" gibi Türkçe karakterli
-> aramalar sonuç döndürmez. PostgreSQL'i elle başlatıyorsanız:
-> `initdb -E UTF-8 --locale=en_US.UTF-8 <veri-dizini>`
+Toplam 8 koleksiyon kullanılıyor: `users`, `customers`, `services`,
+`orders`, `orderitems`, `orderstatushistories`, `couriertasks`, `payments`.
+Alan tanımları `apps/api/models/` klasöründeki Mongoose şemalarındadır
+(ayrıntı için `db/README.md`).
+
+Bağlantı adresi `apps/api/.env` içinde:
+
+```
+MONGO_URL=mongodb://localhost:27017/laundry_erp
+```
+
+> MongoDB başka bir portta çalışıyorsa sadece bu satırı değiştirmeniz yeterli.
 
 ---
 
@@ -178,7 +191,7 @@ Her açılışta sırayla:
 
 | # | Terminal | Komut | Adres |
 |---|----------|-------|-------|
-| 1 | — | PostgreSQL servisinin çalıştığından emin olun | `localhost:5432` |
+| 1 | — | MongoDB servisinin çalıştığından emin olun | `localhost:27017` |
 | 2 | 1. terminal | `cd apps/api && npm run dev` | http://localhost:3101 |
 | 3 | 2. terminal | `cd apps/web-admin && npm run dev` | http://localhost:5101 |
 | 4 | 3. terminal | `cd apps/mobile && npx expo start --android` | emülatör |

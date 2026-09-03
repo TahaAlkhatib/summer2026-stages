@@ -41,7 +41,7 @@ function OrderDetail() {
     setBasarili("");
     try {
       await api.post("/payments", {
-        order_id: Number(id),
+        order_id: id,
         amount: Number(odemeTutar),
         method: odemeYontem,
       });

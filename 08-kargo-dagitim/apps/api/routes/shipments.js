@@ -1,5 +1,9 @@
 const express = require('express');
-const { sorgu, tek } = require('../db');
+const Shipment = require('../models/Shipment');
+const ShipmentEvent = require('../models/ShipmentEvent');
+const CodCollection = require('../models/CodCollection');
+const Merchant = require('../models/Merchant');
+const Branch = require('../models/Branch');
 const { girisGerekli, rolGerekli } = require('../auth');
 const {
   barkodUret, subeBul, ucretHesapla, hareketEkle, DURUMLAR,
@@ -8,103 +12,148 @@ const {
 const router = express.Router();
 router.use(girisGerekli);
 
+// Liste cevabını istemcilerin beklediği düz biçime çevirir
+function bicimle(g) {
+  return {
+    id: g._id.toString(),
+    barcode: g.barcode,
+    merchant_id: g.merchant_id ? (g.merchant_id._id || g.merchant_id).toString() : null,
+    company_name: g.merchant_id && g.merchant_id.company_name ? g.merchant_id.company_name : '',
+    merchant_code: g.merchant_id && g.merchant_id.code ? g.merchant_id.code : '',
+    origin_branch_name: g.origin_branch_id && g.origin_branch_id.name ? g.origin_branch_id.name : '',
+    dest_branch_id: g.dest_branch_id ? (g.dest_branch_id._id || g.dest_branch_id).toString() : null,
+    dest_branch_name: g.dest_branch_id && g.dest_branch_id.name ? g.dest_branch_id.name : '',
+    courier_id: g.courier_id ? (g.courier_id._id || g.courier_id).toString() : null,
+    courier_name: g.courier_id && g.courier_id.full_name ? g.courier_id.full_name : null,
+    receiver_name: g.receiver_name,
+    receiver_phone: g.receiver_phone,
+    receiver_address: g.receiver_address,
+    receiver_district: g.receiver_district,
+    receiver_city: g.receiver_city,
+    desi: g.desi,
+    weight_kg: g.weight_kg,
+    content: g.content,
+    payment_type: g.payment_type,
+    shipping_fee: g.shipping_fee,
+    cod_amount: g.cod_amount,
+    status: g.status,
+    delivered_at: g.delivered_at,
+    delivered_to: g.delivered_to,
+    delivery_note: g.delivery_note,
+    attempt_count: g.attempt_count,
+    signature: g.signature,
+    created_at: g.created_at,
+  };
+}
+
 // Gönderi listesi.
 // Tacir kullanıcıları sadece kendi gönderilerini görebilir.
 router.get('/', async (req, res) => {
-  const kosullar = [];
-  const degerler = [];
+  const filtre = {};
 
   if (req.kullanici.role === 'tacir') {
-    degerler.push(req.kullanici.merchantId);
-    kosullar.push(`g.merchant_id = $${degerler.length}`);
+    filtre.merchant_id = req.kullanici.merchantId;
   } else if (req.query.merchantId) {
-    degerler.push(req.query.merchantId);
-    kosullar.push(`g.merchant_id = $${degerler.length}`);
+    filtre.merchant_id = req.query.merchantId;
   }
 
-  if (req.query.status) {
-    degerler.push(req.query.status);
-    kosullar.push(`g.status = $${degerler.length}`);
-  }
-  if (req.query.destBranchId) {
-    degerler.push(req.query.destBranchId);
-    kosullar.push(`g.dest_branch_id = $${degerler.length}`);
-  }
-  if (req.query.courierId) {
-    degerler.push(req.query.courierId);
-    kosullar.push(`g.courier_id = $${degerler.length}`);
-  }
+  if (req.query.status) filtre.status = req.query.status;
+  if (req.query.destBranchId) filtre.dest_branch_id = req.query.destBranchId;
+  if (req.query.courierId) filtre.courier_id = req.query.courierId;
+
   if (req.query.q) {
-    degerler.push(`%${req.query.q}%`);
-    const n = degerler.length;
-    // ILIKE: PostgreSQL'de büyük/küçük harf duyarsız arama
-    kosullar.push(`(g.barcode ILIKE $${n} OR g.receiver_name ILIKE $${n}
-                    OR g.receiver_phone ILIKE $${n} OR g.receiver_district ILIKE $${n})`);
+    // Büyük/küçük harf duyarsız arama düzenli ifade (regex) ile yapılır
+    const desen = new RegExp(req.query.q, 'i');
+    filtre.$or = [
+      { barcode: desen },
+      { receiver_name: desen },
+      { receiver_phone: desen },
+      { receiver_district: desen },
+    ];
   }
   // Sadece kapıda ödemeli olanlar
   if (req.query.cod === '1') {
-    kosullar.push(`g.cod_amount > 0`);
+    filtre.cod_amount = { $gt: 0 };
   }
 
-  const nerede = kosullar.length ? 'WHERE ' + kosullar.join(' AND ') : '';
+  const liste = await Shipment.find(filtre)
+    .populate('merchant_id')
+    .populate('origin_branch_id')
+    .populate('dest_branch_id')
+    .populate('courier_id')
+    .sort({ created_at: -1 })
+    .limit(300);
 
-  const liste = await sorgu(
-    `SELECT g.*, m.company_name, m.code AS merchant_code,
-            cs.name AS origin_branch_name, vs.name AS dest_branch_name,
-            k.full_name AS courier_name
-       FROM shipments g
-       JOIN merchants m ON m.id = g.merchant_id
-       JOIN branches cs ON cs.id = g.origin_branch_id
-       LEFT JOIN branches vs ON vs.id = g.dest_branch_id
-       LEFT JOIN users k ON k.id = g.courier_id
-       ${nerede}
-      ORDER BY g.created_at DESC
-      LIMIT 300`,
-    degerler
-  );
+  res.json(liste.map(bicimle));
+});
 
-  res.json(liste);
+// Şube ayrıştırma ekranı: dağıtım şubesine göre gruplanmış bekleyen gönderiler
+router.get('/sorting/summary', rolGerekli('admin', 'operasyon'), async (req, res) => {
+  const subeler = await Branch.find({ is_active: true }).sort({ name: 1 });
+
+  const gruplar = [];
+  for (const sube of subeler) {
+    const bekleyenler = await Shipment.find({
+      dest_branch_id: sube._id,
+      status: { $in: ['olusturuldu', 'subede'] },
+    }).select('cod_amount');
+
+    let kapidaToplam = 0;
+    bekleyenler.forEach((g) => (kapidaToplam += Number(g.cod_amount)));
+
+    gruplar.push({
+      branch_id: sube._id.toString(),
+      code: sube.code,
+      name: sube.name,
+      districts: sube.districts,
+      adet: bekleyenler.length,
+      cod_toplam: kapidaToplam,
+    });
+  }
+
+  res.json(gruplar);
 });
 
 // Barkodla sorgulama — tacir portalındaki takip ekranı da bunu kullanıyor
 router.get('/barcode/:barcode', async (req, res) => {
-  const gonderi = await tek(
-    `SELECT g.*, m.company_name, cs.name AS origin_branch_name,
-            vs.name AS dest_branch_name, k.full_name AS courier_name, k.phone AS courier_phone
-       FROM shipments g
-       JOIN merchants m ON m.id = g.merchant_id
-       JOIN branches cs ON cs.id = g.origin_branch_id
-       LEFT JOIN branches vs ON vs.id = g.dest_branch_id
-       LEFT JOIN users k ON k.id = g.courier_id
-      WHERE g.barcode = $1`,
-    [req.params.barcode.trim().toUpperCase()]
-  );
+  const gonderi = await Shipment.findOne({ barcode: req.params.barcode.trim().toUpperCase() })
+    .populate('merchant_id')
+    .populate('origin_branch_id')
+    .populate('dest_branch_id')
+    .populate('courier_id');
 
   if (!gonderi) {
     return res.status(404).json({ message: 'Bu barkoda ait gönderi bulunamadı.' });
   }
-  if (req.kullanici.role === 'tacir' && gonderi.merchant_id !== req.kullanici.merchantId) {
+  if (
+    req.kullanici.role === 'tacir' &&
+    gonderi.merchant_id._id.toString() !== req.kullanici.merchantId
+  ) {
     return res.status(403).json({ message: 'Bu gönderiyi görüntüleme yetkiniz yok.' });
   }
 
-  const hareketler = await sorgu(
-    `SELECT e.*, b.name AS branch_name, u.full_name AS user_name
-       FROM shipment_events e
-       LEFT JOIN branches b ON b.id = e.branch_id
-       LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.shipment_id = $1
-      ORDER BY e.created_at`,
-    [gonderi.id]
-  );
+  const hareketler = await ShipmentEvent.find({ shipment_id: gonderi._id })
+    .populate('branch_id')
+    .populate('user_id')
+    .sort({ created_at: 1 });
 
-  const tahsilat = await tek(
-    `SELECT * FROM cod_collections WHERE shipment_id = $1`, [gonderi.id]
-  );
+  const tahsilat = await CodCollection.findOne({ shipment_id: gonderi._id });
+
+  const cevap = bicimle(gonderi);
+  cevap.courier_phone = gonderi.courier_id ? gonderi.courier_id.phone : null;
 
   res.json({
-    shipment: gonderi,
-    events: hareketler.map((h) => ({ ...h, status_label: DURUMLAR[h.status] || h.status })),
-    cod: tahsilat,
+    shipment: cevap,
+    events: hareketler.map((h) => ({
+      id: h._id.toString(),
+      status: h.status,
+      status_label: DURUMLAR[h.status] || h.status,
+      description: h.description,
+      branch_name: h.branch_id ? h.branch_id.name : null,
+      user_name: h.user_id ? h.user_id.full_name : null,
+      created_at: h.created_at,
+    })),
+    cod: tahsilat ? tahsilat.toJSON() : null,
   });
 });
 
@@ -125,7 +174,7 @@ router.post('/', rolGerekli('admin', 'operasyon', 'tacir'), async (req, res) => 
     return res.status(400).json({ message: 'Alıcı adı, telefonu, adresi ve ilçesi zorunludur.' });
   }
 
-  const tacir = await tek(`SELECT * FROM merchants WHERE id = $1 AND is_active = TRUE`, [tacirId]);
+  const tacir = await Merchant.findOne({ _id: tacirId, is_active: true }).catch(() => null);
   if (!tacir) {
     return res.status(400).json({ message: 'Tacir bulunamadı.' });
   }
@@ -153,69 +202,55 @@ router.post('/', rolGerekli('admin', 'operasyon', 'tacir'), async (req, res) => 
   let cikisSubeId = req.kullanici.branchId;
   if (!cikisSubeId) {
     const tacirSubesi = await subeBul(tacir.district || '');
-    cikisSubeId = tacirSubesi ? tacirSubesi.id : varisSube.id;
+    cikisSubeId = tacirSubesi ? tacirSubesi._id : varisSube._id;
   }
 
-  const barkod = await barkodUret();
-  const ucret = ucretHesapla(tacir, desiDegeri);
+  const gonderi = await Shipment.create({
+    barcode: await barkodUret(),
+    merchant_id: tacir._id,
+    origin_branch_id: cikisSubeId,
+    dest_branch_id: varisSube._id,
+    receiver_name: receiverName.trim(),
+    receiver_phone: receiverPhone.trim(),
+    receiver_address: receiverAddress.trim(),
+    receiver_district: receiverDistrict.trim(),
+    desi: desiDegeri,
+    weight_kg: weightKg || null,
+    content: content || null,
+    payment_type: paymentType === 'alici_odemeli' ? 'alici_odemeli' : 'gonderici_odemeli',
+    shipping_fee: ucretHesapla(tacir, desiDegeri),
+    cod_amount: kapidaOdeme,
+    status: 'olusturuldu',
+    created_by: req.kullanici.id,
+  });
 
-  const gonderi = await tek(
-    `INSERT INTO shipments
-       (barcode, merchant_id, origin_branch_id, dest_branch_id,
-        receiver_name, receiver_phone, receiver_address, receiver_district,
-        desi, weight_kg, content, payment_type, shipping_fee, cod_amount,
-        status, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'olusturuldu',$15)
-     RETURNING *`,
-    [
-      barkod, tacir.id, cikisSubeId, varisSube.id,
-      receiverName.trim(), receiverPhone.trim(), receiverAddress.trim(),
-      receiverDistrict.trim(), desiDegeri, weightKg || null, content || null,
-      paymentType === 'alici_odemeli' ? 'alici_odemeli' : 'gonderici_odemeli',
-      ucret, kapidaOdeme, req.kullanici.id,
-    ]
+  await hareketEkle(
+    gonderi._id, 'olusturuldu',
+    `Gönderi kaydı oluşturuldu. Dağıtım şubesi: ${varisSube.name}`,
+    cikisSubeId, req.kullanici.id
   );
 
-  await hareketEkle(gonderi.id, 'olusturuldu',
-    `Gönderi kaydı oluşturuldu. Dağıtım şubesi: ${varisSube.name}`,
-    cikisSubeId, req.kullanici.id);
-
-  res.status(201).json({ ...gonderi, dest_branch_name: varisSube.name });
+  const cevap = gonderi.toJSON();
+  cevap.dest_branch_name = varisSube.name;
+  res.status(201).json(cevap);
 });
 
 // Şubeye giriş (kabul) — barkod okutulur
 router.post('/:id/accept', rolGerekli('admin', 'operasyon'), async (req, res) => {
-  const gonderi = await tek(`SELECT * FROM shipments WHERE id = $1`, [req.params.id]);
+  const gonderi = await Shipment.findById(req.params.id).catch(() => null);
   if (!gonderi) return res.status(404).json({ message: 'Gönderi bulunamadı.' });
 
   if (gonderi.status === 'teslim_edildi') {
     return res.status(400).json({ message: 'Teslim edilmiş gönderi tekrar kabul edilemez.' });
   }
 
-  const guncel = await tek(
-    `UPDATE shipments SET status = 'subede' WHERE id = $1 RETURNING *`, [gonderi.id]
-  );
+  gonderi.status = 'subede';
+  await gonderi.save();
 
-  await hareketEkle(gonderi.id, 'subede', 'Şubeye kabul edildi.',
+  await hareketEkle(gonderi._id, 'subede', 'Şubeye kabul edildi.',
     req.kullanici.branchId, req.kullanici.id);
 
-  res.json(guncel);
-});
-
-// Şube ayrıştırma ekranı: dağıtım şubesine göre gruplanmış bekleyen gönderiler
-router.get('/sorting/summary', rolGerekli('admin', 'operasyon'), async (req, res) => {
-  const gruplar = await sorgu(
-    `SELECT b.id AS branch_id, b.code, b.name, b.districts,
-            COUNT(g.id)::int AS adet,
-            COALESCE(SUM(g.cod_amount), 0)::numeric AS cod_toplam
-       FROM branches b
-       LEFT JOIN shipments g
-         ON g.dest_branch_id = b.id AND g.status IN ('olusturuldu', 'subede')
-      WHERE b.is_active = TRUE
-      GROUP BY b.id, b.code, b.name, b.districts
-      ORDER BY b.name`
-  );
-  res.json(gruplar);
+  res.json(gonderi);
 });
 
 module.exports = router;

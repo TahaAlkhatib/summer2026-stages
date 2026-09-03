@@ -2,6 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> ⚠️ **Kısmen geçersiz (2026-09-03).** Bu plan yazıldığında proje PostgreSQL
+> kullanıyordu. Sonradan müşteri kararıyla MongoDB'ye (Mongoose) taşındı; Faz 0'daki
+> PostgreSQL kurulum adımları ve aşağıdaki SQL sorguları artık uygulanmıyor.
+> Güncel durum: `plan.md` ve `01-camasirhane-erp/db/README.md`. Bu dosya, işin
+> nasıl planlandığının kaydı olarak duruyor.
+
 **Goal:** Bir çamaşırhanenin sipariş alma, yıkama aşaması takibi, barkod etiket basımı, kurye dağıtımı ve gün sonu kasa raporu akışlarını uçtan uca çalıştıran 4 uygulamalık bir sistem üretmek.
 
 **Architecture:** Tek bir Express + PostgreSQL API veritabanına yazan tek bileşendir. WinForms kasa uygulaması, React web yönetim paneli ve React Native mobil uygulaması bu API'ye HTTP/JSON ile konuşur; hiçbiri veritabanına doğrudan bağlanmaz. Kimlik doğrulama JWT ile yapılır, rol bilgisi token içinde taşınır ve controller içinde kontrol edilir.

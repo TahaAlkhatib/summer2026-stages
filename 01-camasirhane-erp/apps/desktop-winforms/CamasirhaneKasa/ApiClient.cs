@@ -17,7 +17,8 @@ namespace CamasirhaneKasa
         public static string BaseUrl = "http://localhost:3101/api";
 
         public static string Token = "";
-        public static int UserId;
+        // MongoDB kimlikleri 24 karakterlik metin (ObjectId)
+        public static string UserId = "";
         public static string UserName = "";
         public static string Role = "";
 
@@ -105,8 +106,8 @@ namespace CamasirhaneKasa
         }
 
         // ---- JSON okuma yardimcilari ----
-        // PostgreSQL NUMERIC alanlari JSON'a metin olarak geliyor ("545.00"),
-        // bu yuzden hem sayi hem metin durumunu ele almak gerekiyor.
+        // API bazi alanlari sayi, bazilarini metin olarak dondurebiliyor
+        // (orn. "545.00" ya da 545). Ikisini de ele almak icin bu yardimcilar.
 
         public static string Metin(JsonElement kayit, string alan)
         {

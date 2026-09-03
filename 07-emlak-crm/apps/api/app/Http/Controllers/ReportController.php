@@ -10,7 +10,6 @@ use App\Models\Installment;
 use App\Models\Property;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -31,14 +30,20 @@ class ReportController extends Controller
 
         // Bu ay tahsil edilen kira
         $ayTahsilat = (float) Installment::where('status', 'odendi')
-            ->whereDate('paid_at', '>=', $ayBasi)
+            ->where('paid_at', '>=', $ayBasi)
             ->sum('paid_amount');
 
-        // Geciken taksitler
-        $gecikenSorgu = Installment::whereIn('status', ['bekliyor', 'gecikti'])
-            ->whereDate('due_date', '<', $bugun);
-        $gecikenAdet = (clone $gecikenSorgu)->count();
-        $gecikenTutar = (float) (clone $gecikenSorgu)->sum(DB::raw('amount - paid_amount'));
+        // Geciken taksitler.
+        // MongoDB'de "amount - paid_amount" gibi bir kolon aritmetiği
+        // doğrudan toplanamaz; kayıtları çekip PHP tarafında topluyoruz.
+        $gecikenler = Installment::whereIn('status', ['bekliyor', 'gecikti'])
+            ->where('due_date', '<', $bugun)
+            ->get();
+        $gecikenAdet = $gecikenler->count();
+        $gecikenTutar = 0.0;
+        foreach ($gecikenler as $taksit) {
+            $gecikenTutar += (float) $taksit->amount - (float) $taksit->paid_amount;
+        }
 
         // Bu ay kesilen komisyon
         $ayKomisyon = (float) Contract::whereDate('created_at', '>=', $ayBasi)
@@ -114,22 +119,32 @@ class ReportController extends Controller
     // Portföy dağılımı — ilçe ve tipe göre
     public function portfolio()
     {
-        $ilceler = Property::select('district', DB::raw('count(*) as adet'))
-            ->where('status', 'aktif')
-            ->groupBy('district')
-            ->orderByDesc('adet')
-            ->get();
-
-        $tipler = Property::select('property_type', DB::raw('count(*) as adet'))
-            ->where('status', 'aktif')
-            ->groupBy('property_type')
-            ->orderByDesc('adet')
-            ->get();
+        // Aktif portföyleri bir kez çekip PHP tarafında sayıyoruz.
+        // (MongoDB'de GROUP BY için "aggregate" gerekir; burada kayıt sayısı
+        // az olduğu için basit bir döngü yeterli.)
+        $aktifler = Property::where('status', 'aktif')->get(['district', 'property_type']);
 
         return response()->json([
-            'by_district' => $ilceler,
-            'by_type' => $tipler,
+            'by_district' => $this->grupla($aktifler, 'district'),
+            'by_type' => $this->grupla($aktifler, 'property_type'),
         ]);
+    }
+
+    // Verilen alana göre kayıtları sayar, çoktan aza sıralar
+    private function grupla($kayitlar, string $alan): array
+    {
+        $sayilar = [];
+        foreach ($kayitlar as $kayit) {
+            $deger = $kayit->{$alan} ?: '-';
+            $sayilar[$deger] = ($sayilar[$deger] ?? 0) + 1;
+        }
+        arsort($sayilar);
+
+        $sonuc = [];
+        foreach ($sayilar as $deger => $adet) {
+            $sonuc[] = [$alan => $deger, 'adet' => $adet];
+        }
+        return $sonuc;
     }
 
     private function ayAdi(int $ay): string

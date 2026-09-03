@@ -44,7 +44,8 @@ function NewOrder() {
   }, [musteriArama]);
 
   function kalemEkle() {
-    const hizmet = hizmetler.find((h) => h.id === Number(secilenHizmet));
+    // MongoDB kimlikleri metin olduğu için sayıya çevirmiyoruz
+    const hizmet = hizmetler.find((h) => h.id === secilenHizmet);
     if (!hizmet) return;
     const adet = Number(miktar);
     if (!adet || adet <= 0) {

@@ -1,13 +1,25 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import {
-  Appointment, Invoice, MedicalRecord, Patient, Payment,
-} from '../entities';
+  Appointment, AppointmentSchema, Doctor, DoctorSchema,
+  Invoice, InvoiceSchema, MedicalRecord, MedicalRecordSchema,
+  Patient, PatientSchema, Payment, PaymentSchema,
+  Prescription, PrescriptionSchema, User, UserSchema,
+} from '../schemas';
 import { HastaPortalController } from './hasta-portal.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Patient, Appointment, MedicalRecord, Invoice, Payment]),
+    MongooseModule.forFeature([
+      { name: Patient.name, schema: PatientSchema },
+      { name: Appointment.name, schema: AppointmentSchema },
+      { name: MedicalRecord.name, schema: MedicalRecordSchema },
+      { name: Prescription.name, schema: PrescriptionSchema },
+      { name: Invoice.name, schema: InvoiceSchema },
+      { name: Payment.name, schema: PaymentSchema },
+      { name: Doctor.name, schema: DoctorSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
   ],
   controllers: [HastaPortalController],
 })

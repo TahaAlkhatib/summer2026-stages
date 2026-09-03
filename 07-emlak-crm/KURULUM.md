@@ -11,7 +11,7 @@ adımları içerir.
 |---------|-------|-------------------|---------------------|
 | **PHP** | 8.3+ | Windows: https://windows.php.net/download veya Laragon / XAMPP | API |
 | **Composer** | 2.x | https://getcomposer.org/download/ | API |
-| **PostgreSQL** | 14+ | https://www.postgresql.org/download/ | Veritabanı |
+| **MongoDB** | 4.4+ | https://www.mongodb.com/try/download/community | Veritabanı |
 | **Node.js** | 20+ | https://nodejs.org | Web paneli |
 | **Flutter SDK** | 3.24.5 | https://docs.flutter.dev/get-started/install | Mobil uygulama |
 | **Android Studio** | güncel | https://developer.android.com/studio | Android emülatörü |
@@ -21,38 +21,52 @@ Kontrol:
 ```bash
 php --version           # 8.3 veya üzeri
 composer --version
-psql --version
+mongod --version        # 4.4 veya üzeri
 node --version
 flutter doctor
 ```
 
-> **PHP eklentileri:** `pdo_pgsql`, `intl`, `zip`, `mbstring`, `fileinfo` açık
-> olmalı. Windows'ta `php.ini` içinde ilgili `extension=` satırlarının başındaki
+> **PHP eklentileri:** `mongodb`, `intl`, `zip`, `mbstring`, `fileinfo` açık
+> olmalı. `mongodb` eklentisi PHP ile birlikte gelmez, ayrıca kurulur:
+> ```bash
+> pecl install mongodb        # macOS / Linux
+> ```
+> Windows'ta https://pecl.php.net/package/mongodb adresinden DLL indirip
+> `php.ini` içine `extension=php_mongodb.dll` satırını ekleyin. Diğer
+> eklentiler için `php.ini` içindeki `extension=` satırlarının başındaki
 > `;` işaretini silmeniz yeterli. Kontrol:
 > ```bash
-> php -m
+> php -m | grep mongodb
 > ```
 
 ---
 
-## 2. Veritabanı (PostgreSQL)
+## 2. Veritabanı (MongoDB)
 
-Kullanıcı ve veritabanını oluşturun:
+MongoDB'de **elle veritabanı veya tablo oluşturmak gerekmez.** Servisin
+çalışıyor olması yeterli:
 
 ```bash
-psql -U postgres
+# macOS (Homebrew)
+brew services start mongodb-community
+
+# Windows: MongoDB servisi kurulumdan sonra otomatik başlar
+# Linux
+sudo systemctl start mongod
 ```
 
-```sql
-CREATE USER realestate_user WITH PASSWORD 'realestate123';
-CREATE DATABASE realestate_crm OWNER realestate_user ENCODING 'UTF8' TEMPLATE template0;
-\q
+Bağlantı kontrolü:
+
+```bash
+mongo --eval "db.version()"      # MongoDB 4.x
+mongosh --eval "db.version()"    # MongoDB 5+
 ```
 
-> **Encoding UTF-8 olmalı.** `C` locale ile oluşturulan bir veritabanında
-> `ILIKE` ile "Şahin", "Öztürk" gibi Türkçe aramalar sessizce boş sonuç döner.
+Bağlantı adresi `apps/api/.env` içindeki `MONGO_URL` ve `MONGO_DATABASE`
+değişkenlerindedir (varsayılan: `mongodb://localhost:27017` / `realestate_crm`).
 
-Tabloları elle oluşturmanıza gerek yok; migration'lar bunu yapar (Adım 3).
+Koleksiyonlar ilk kayıtla birlikte kendiliğinden oluşur; 3. adımdaki
+`php artisan migrate` komutu yalnızca **indeksleri** kurar.
 
 ---
 
@@ -63,7 +77,7 @@ cd apps/api
 composer install
 cp .env.example .env        # zaten varsa atlayın
 php artisan key:generate
-php artisan migrate         # tabloları oluşturur
+php artisan migrate         # koleksiyon indekslerini kurar
 php artisan db:seed         # demo verisini yükler
 php artisan serve --port=8107
 ```
@@ -185,7 +199,7 @@ başlatın; bilgisayarınızın IP adresini `ipconfig` (Windows) veya `ifconfig`
 ## 8. Çalıştırma Sırası (özet)
 
 ```bash
-# 1. Veritabanı — PostgreSQL servisi çalışıyor olmalı
+# 1. Veritabanı — MongoDB servisi çalışıyor olmalı
 
 # 2. API  (yeni terminal)
 cd apps/api && composer install && php artisan migrate && php artisan db:seed
@@ -204,8 +218,9 @@ cd apps/mobile && flutter pub get && flutter run
 
 | Sorun | Çözüm |
 |-------|-------|
-| `could not find driver` | `pdo_pgsql` eklentisi kapalı. `php.ini` içinde `extension=pdo_pgsql` satırını açın |
-| `SQLSTATE[08006] connection refused` | PostgreSQL çalışmıyor veya `.env` içindeki port yanlış |
+| `could not find driver` | `mongodb` eklentisi kurulu değil. `pecl install mongodb` çalıştırıp `php.ini` içine `extension=mongodb` satırını ekleyin |
+| `No suitable servers found` / `Connection refused ... 27017` | MongoDB çalışmıyor veya `.env` içindeki `MONGO_URL` yanlış |
+| `Class "MongoDB\Driver\Manager" not found` | PHP'nin `mongodb` eklentisi kurulu değil (1. adıma bakın) |
 | `Please provide a valid cache path` | `php artisan cache:clear` ve `storage/framework` klasörlerinin var olduğundan emin olun |
 | Panelde `Sunucuya bağlanılamadı` | API çalışıyor mu? `.env` içindeki `VITE_API_URL` doğru mu? |
 | Panel yavaş açılıyor | `PHP_CLI_SERVER_WORKERS=5` ile başlatın (yukarıya bakın) |
@@ -213,3 +228,4 @@ cd apps/mobile && flutter pub get && flutter run
 | Evrak yüklenmiyor | Sadece PDF, JPG, PNG, DOC/DOCX ve en fazla 10 MB kabul edilir |
 | Demo verisi karıştı | `cd apps/api && php artisan db:seed` |
 | Veritabanını tamamen sıfırlamak | `php artisan migrate:fresh --seed` |
+| Türkçe büyük harfle arama (`BEŞİKTAŞ`) sonuç bulmuyor | MongoDB'nin harf duyarsız araması Türkçe `İ`/`ı` harflerini eşlemez. Küçük harfle arayın (`beşiktaş`). |

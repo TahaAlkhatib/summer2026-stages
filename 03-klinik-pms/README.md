@@ -15,10 +15,10 @@ hasta mobil uygulaması yalnızca bu API'ye HTTP/JSON ile konuşur.
 
 ```
                          ┌───────────────────────┐
-                         │   PostgreSQL          │
+                         │   MongoDB             │
                          │   clinic_db           │
                          └───────────▲───────────┘
-                                     │ TypeORM
+                                     │ Mongoose
                          ┌───────────┴───────────┐
                          │   API (NestJS 12)     │
                          │   localhost:3103      │
@@ -40,7 +40,7 @@ hasta mobil uygulaması yalnızca bu API'ye HTTP/JSON ile konuşur.
 
 | Uygulama | Teknoloji | Klasör |
 |----------|-----------|--------|
-| API | NestJS 12, TypeORM 1.1, PostgreSQL 16, JWT, BCrypt | `apps/api` |
+| API | NestJS 12, Mongoose 9, MongoDB, JWT, BCrypt | `apps/api` |
 | Web Portalı | React 19, Vite, React Router | `apps/web` |
 | Resepsiyon | Electron 44 + React + Vite | `apps/reception-desktop` |
 | Hasta Mobil | Flutter 3.24.5, http, shared_preferences | `apps/mobile` |
@@ -150,10 +150,10 @@ Planlandı ──▶ Geldi (resepsiyon check-in) ──▶ Tamamlandı (doktor m
 
 ---
 
-## Veritabanı Tabloları
+## Veritabanı Koleksiyonları
 
-| Tablo | Açıklama |
-|-------|----------|
+| Koleksiyon | Açıklama |
+|------------|----------|
 | `users` | Personel: admin, resepsiyon, doktor |
 | `patients` | Hastalar (TC kimlik no benzersiz) |
 | `doctors` | Doktorlar (branş, muayene ücreti) |

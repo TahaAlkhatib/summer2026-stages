@@ -5,7 +5,8 @@ namespace CamasirhaneKasa
     // ComboBox içinde gösterilecek hizmet satırı
     public class HizmetOge
     {
-        public int Id;
+        // MongoDB kimlikleri metin (ObjectId)
+        public string Id;
         public string Ad;
         public string Birim;
         public decimal Fiyat;
@@ -19,7 +20,7 @@ namespace CamasirhaneKasa
     // ComboBox içinde gösterilecek müşteri satırı
     public class MusteriOge
     {
-        public int Id;
+        public string Id;
         public string Ad;
         public string Telefon;
         public string Adres;
@@ -33,7 +34,7 @@ namespace CamasirhaneKasa
     // Siparişe eklenen kalem
     public class KalemOge
     {
-        public int ServiceId;
+        public string ServiceId;
         public string Ad;
         public decimal Miktar;
         public decimal BirimFiyat;
@@ -65,7 +66,7 @@ namespace CamasirhaneKasa
                 foreach (JsonElement h in liste.EnumerateArray())
                 {
                     HizmetOge oge = new HizmetOge();
-                    oge.Id = ApiClient.Tam(h, "id");
+                    oge.Id = ApiClient.Metin(h, "id");
                     oge.Ad = ApiClient.Metin(h, "name");
                     oge.Birim = ApiClient.Metin(h, "unit");
                     oge.Fiyat = ApiClient.Para(h, "price");
@@ -93,7 +94,7 @@ namespace CamasirhaneKasa
                 foreach (JsonElement m in liste.EnumerateArray())
                 {
                     MusteriOge oge = new MusteriOge();
-                    oge.Id = ApiClient.Tam(m, "id");
+                    oge.Id = ApiClient.Metin(m, "id");
                     oge.Ad = ApiClient.Metin(m, "full_name");
                     oge.Telefon = ApiClient.Metin(m, "phone");
                     oge.Adres = ApiClient.Metin(m, "address");

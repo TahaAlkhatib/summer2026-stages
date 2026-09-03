@@ -1,6 +1,11 @@
 const express = require("express");
-const pool = require("../db");
+const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
+const Payment = require("../models/Payment");
+const CourierTask = require("../models/CourierTask");
+const Customer = require("../models/Customer");
 const { verifyToken } = require("../auth");
+const { gunBasi, gunSonu, gunMetni, ayBasi } = require("../tarih");
 
 const router = express.Router();
 router.use(verifyToken);
@@ -12,49 +17,44 @@ router.get("/daily", async (req, res) => {
   }
 
   try {
-    // Tarih verilmediyse veritabaninin yerel gununu kullaniyoruz.
-    // new Date().toISOString() UTC dondurdugu icin gece 00:00-03:00 arasinda
-    // bir onceki gunun raporunu getiriyordu (Turkiye UTC+3).
-    const cozulen = await pool.query(
-      "SELECT TO_CHAR(COALESCE($1::date, CURRENT_DATE), 'YYYY-MM-DD') AS tarih",
-      [req.query.date || null]
-    );
-    const tarih = cozulen.rows[0].tarih;
+    // Tarih verilmediyse bugünün yerel günü kullanılır.
+    // (tarih.js içindeki yardımcılar UTC kaymasını önlüyor.)
+    const bas = gunBasi(req.query.date || undefined);
+    const bit = gunSonu(req.query.date || undefined);
+    const tarih = gunMetni(bas);
 
-    const siparisler = await pool.query(
-      `SELECT o.order_no, o.total_amount, o.paid_amount, o.status, c.full_name AS customer_name
-       FROM orders o JOIN customers c ON c.id = o.customer_id
-       WHERE DATE(o.created_at) = $1 ORDER BY o.created_at`,
-      [tarih]
-    );
+    const siparisler = await Order.find({ created_at: { $gte: bas, $lt: bit } })
+      .populate("customer_id")
+      .sort({ created_at: 1 });
 
-    const tahsilat = await pool.query(
-      `SELECT method, COALESCE(SUM(amount), 0) AS tutar
-       FROM payments WHERE DATE(created_at) = $1 GROUP BY method`,
-      [tarih]
-    );
+    const odemeler = await Payment.find({ created_at: { $gte: bas, $lt: bit } });
 
-    const teslim = await pool.query(
-      "SELECT COUNT(*) FROM orders WHERE DATE(delivered_at) = $1",
-      [tarih]
-    );
+    const teslimSayisi = await Order.countDocuments({
+      delivered_at: { $gte: bas, $lt: bit },
+    });
 
     const kasa = { nakit: 0, kart: 0, havale: 0, toplam: 0 };
-    tahsilat.rows.forEach((s) => {
-      kasa[s.method] = Number(s.tutar);
-      kasa.toplam += Number(s.tutar);
+    odemeler.forEach((o) => {
+      kasa[o.method] += Number(o.amount);
+      kasa.toplam += Number(o.amount);
     });
 
     let ciro = 0;
-    siparisler.rows.forEach((s) => (ciro += Number(s.total_amount)));
+    siparisler.forEach((s) => (ciro += Number(s.total_amount)));
 
     res.json({
       date: tarih,
-      order_count: siparisler.rows.length,
+      order_count: siparisler.length,
       total_amount: ciro,
       collected: kasa,
-      delivered_count: Number(teslim.rows[0].count),
-      orders: siparisler.rows,
+      delivered_count: teslimSayisi,
+      orders: siparisler.map((s) => ({
+        order_no: s.order_no,
+        total_amount: s.total_amount,
+        paid_amount: s.paid_amount,
+        status: s.status,
+        customer_name: s.customer_id ? s.customer_id.full_name : "",
+      })),
     });
   } catch (err) {
     console.error(err);
@@ -65,40 +65,60 @@ router.get("/daily", async (req, res) => {
 // Yönetim paneli özeti
 router.get("/summary", async (req, res) => {
   try {
-    const durumlar = await pool.query("SELECT status, COUNT(*) FROM orders GROUP BY status");
-    const bugun = await pool.query(
-      "SELECT COUNT(*) AS adet, COALESCE(SUM(total_amount), 0) AS ciro FROM orders WHERE DATE(created_at) = CURRENT_DATE"
-    );
-    const ay = await pool.query(
-      `SELECT COUNT(*) AS adet, COALESCE(SUM(total_amount), 0) AS ciro FROM orders
-       WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)`
-    );
-    const bekleyenGorev = await pool.query(
-      "SELECT COUNT(*) FROM courier_tasks WHERE status IN ('bekliyor','yolda')"
-    );
-    const borc = await pool.query(
-      `SELECT COALESCE(SUM(total_amount - paid_amount), 0) AS tutar FROM orders
-       WHERE status <> 'iptal' AND total_amount > paid_amount`
-    );
-    const enCokHizmet = await pool.query(
-      `SELECT s.name, COUNT(DISTINCT i.order_id) AS order_count, COALESCE(SUM(i.line_total), 0) AS revenue
-       FROM order_items i JOIN services s ON s.id = i.service_id
-       GROUP BY s.name ORDER BY revenue DESC LIMIT 5`
-    );
+    const durumSayilari = {
+      alindi: 0, yikamada: 0, utude: 0, hazir: 0, teslim_edildi: 0, iptal: 0,
+    };
+    for (const durum of Object.keys(durumSayilari)) {
+      durumSayilari[durum] = await Order.countDocuments({ status: durum });
+    }
 
-    const durumSayilari = { alindi: 0, yikamada: 0, utude: 0, hazir: 0, teslim_edildi: 0, iptal: 0 };
-    durumlar.rows.forEach((s) => (durumSayilari[s.status] = Number(s.count)));
+    const bugunBas = gunBasi();
+    const bugunBit = gunSonu();
+    const bugunSiparisler = await Order.find({ created_at: { $gte: bugunBas, $lt: bugunBit } });
+    const aySiparisler = await Order.find({ created_at: { $gte: ayBasi() } });
+
+    let bugunCiro = 0;
+    bugunSiparisler.forEach((s) => (bugunCiro += Number(s.total_amount)));
+    let ayCiro = 0;
+    aySiparisler.forEach((s) => (ayCiro += Number(s.total_amount)));
+
+    const bekleyenGorev = await CourierTask.countDocuments({
+      status: { $in: ["bekliyor", "yolda"] },
+    });
+
+    // Ödenmemiş bakiye: iptal olmayan ve borcu kalan siparişler
+    const borcluSiparisler = await Order.find({ status: { $ne: "iptal" } });
+    let borc = 0;
+    borcluSiparisler.forEach((s) => {
+      const kalan = Number(s.total_amount) - Number(s.paid_amount);
+      if (kalan > 0) borc += kalan;
+    });
+
+    // En çok gelir getiren 5 hizmet.
+    // MongoDB'de gruplama "aggregate" ile yapılır.
+    const enCokHizmet = await OrderItem.aggregate([
+      {
+        $group: {
+          _id: "$item_name",
+          revenue: { $sum: "$line_total" },
+          orders: { $addToSet: "$order_id" },
+        },
+      },
+      { $project: { name: "$_id", revenue: 1, order_count: { $size: "$orders" } } },
+      { $sort: { revenue: -1 } },
+      { $limit: 5 },
+    ]);
 
     res.json({
       status_counts: durumSayilari,
-      today: { order_count: Number(bugun.rows[0].adet), total_amount: Number(bugun.rows[0].ciro) },
-      month: { order_count: Number(ay.rows[0].adet), total_amount: Number(ay.rows[0].ciro) },
-      pending_courier_tasks: Number(bekleyenGorev.rows[0].count),
-      unpaid_total: Number(borc.rows[0].tutar),
-      top_services: enCokHizmet.rows.map((h) => ({
+      today: { order_count: bugunSiparisler.length, total_amount: bugunCiro },
+      month: { order_count: aySiparisler.length, total_amount: ayCiro },
+      pending_courier_tasks: bekleyenGorev,
+      unpaid_total: borc,
+      top_services: enCokHizmet.map((h) => ({
         name: h.name,
-        order_count: Number(h.order_count),
-        revenue: Number(h.revenue),
+        order_count: h.order_count,
+        revenue: h.revenue,
       })),
     });
   } catch (err) {

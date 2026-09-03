@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Appointment, Invoice, Patient, Payment, Supply } from '../entities';
+import { MongooseModule } from '@nestjs/mongoose';
+import {
+  Appointment, AppointmentSchema, Invoice, InvoiceSchema,
+  Patient, PatientSchema, Payment, PaymentSchema, Supply, SupplySchema,
+} from '../schemas';
 import { RaporlarController } from './raporlar.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Appointment, Invoice, Payment, Patient, Supply])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Appointment.name, schema: AppointmentSchema },
+      { name: Invoice.name, schema: InvoiceSchema },
+      { name: Payment.name, schema: PaymentSchema },
+      { name: Patient.name, schema: PatientSchema },
+      { name: Supply.name, schema: SupplySchema },
+    ]),
+  ],
   controllers: [RaporlarController],
 })
 export class RaporlarModule {}

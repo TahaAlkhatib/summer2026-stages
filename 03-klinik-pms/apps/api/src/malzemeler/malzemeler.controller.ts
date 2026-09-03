@@ -1,30 +1,30 @@
 import {
   BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Put, Query, Req, UseGuards,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { Supply } from '../entities';
+import { Supply, SupplyDocument } from '../schemas';
 import { JwtGuard } from '../auth/jwt.guard';
 
 @Controller('api/supplies')
 @UseGuards(JwtGuard)
 export class MalzemelerController {
-  constructor(@InjectRepository(Supply) private malzemeler: Repository<Supply>) {}
+  constructor(@InjectModel(Supply.name) private malzemeler: Model<SupplyDocument>) {}
 
   @Get()
   async listele(@Query('q') q: string, @Query('lowStock') kritik: string) {
-    let liste = await this.malzemeler.find({
-      where: q ? [{ name: ILike('%' + q + '%') }, { code: ILike('%' + q + '%') }] : {},
-      order: { name: 'ASC' },
-    });
+    const desen = q ? new RegExp(q, 'i') : null;
+    const filtre = desen ? { $or: [{ name: desen }, { code: desen }] } : {};
+
+    let liste = await this.malzemeler.find(filtre).sort({ name: 1 });
 
     if (kritik === '1') {
       liste = liste.filter((m) => m.stockQuantity <= m.minStock);
     }
 
     return liste.map((m) => ({
-      id: m.id,
+      id: m._id.toString(),
       code: m.code,
       name: m.name,
       unit: m.unit,
@@ -44,20 +44,25 @@ export class MalzemelerController {
       throw new BadRequestException({ message: 'Malzeme kodu ve adı zorunludur.' });
     }
 
-    const mevcut = await this.malzemeler.findOne({ where: { code: govde.code } });
+    const mevcut = await this.malzemeler.findOne({ code: govde.code });
     if (mevcut) {
       throw new BadRequestException({ message: 'Bu malzeme kodu zaten kayıtlı.' });
     }
 
-    const malzeme = this.malzemeler.create(govde as Partial<Supply>);
-    await this.malzemeler.save(malzeme);
-    return malzeme;
+    return this.malzemeler.create({
+      code: govde.code,
+      name: govde.name,
+      unit: govde.unit,
+      unitPrice: govde.unitPrice,
+      stockQuantity: govde.stockQuantity,
+      minStock: govde.minStock,
+    });
   }
 
   // Depoya mal girişi
   @Put(':id/stock-in')
   async stokGirisi(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() govde: { quantity: number },
     @Req() istek: any,
   ) {
@@ -65,7 +70,7 @@ export class MalzemelerController {
       throw new BadRequestException({ message: 'Bu işlem için yetkiniz yok.' });
     }
 
-    const malzeme = await this.malzemeler.findOne({ where: { id } });
+    const malzeme = await this.malzemeler.findById(id).catch(() => null);
     if (!malzeme) {
       throw new NotFoundException({ message: 'Malzeme bulunamadı.' });
     }
@@ -73,8 +78,8 @@ export class MalzemelerController {
       throw new BadRequestException({ message: 'Giriş miktarı sıfırdan büyük olmalıdır.' });
     }
 
-    malzeme.stockQuantity += govde.quantity;
-    await this.malzemeler.save(malzeme);
-    return { id: malzeme.id, stock_quantity: malzeme.stockQuantity };
+    malzeme.stockQuantity += Number(govde.quantity);
+    await malzeme.save();
+    return { id: malzeme._id.toString(), stock_quantity: malzeme.stockQuantity };
   }
 }

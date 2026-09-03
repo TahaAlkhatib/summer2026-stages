@@ -1,5 +1,5 @@
 const express = require("express");
-const pool = require("../db");
+const Service = require("../models/Service");
 const { verifyToken } = require("../auth");
 
 const router = express.Router();
@@ -8,14 +8,9 @@ router.use(verifyToken);
 // Hizmet listesi
 router.get("/", async (req, res) => {
   try {
-    let sql = "SELECT * FROM services";
-    if (req.query.active === "1") {
-      sql += " WHERE is_active = true";
-    }
-    sql += " ORDER BY category, name";
-
-    const result = await pool.query(sql);
-    res.json(result.rows);
+    const filtre = req.query.active === "1" ? { is_active: true } : {};
+    const hizmetler = await Service.find(filtre).sort({ category: 1, name: 1 });
+    res.json(hizmetler);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Hizmetler getirilemedi." });
@@ -38,11 +33,8 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      "INSERT INTO services (name, category, unit, price) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, category, unit, fiyat]
-    );
-    res.status(201).json(result.rows[0]);
+    const hizmet = await Service.create({ name, category, unit, price: fiyat });
+    res.status(201).json(hizmet);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Hizmet kaydedilemedi." });
@@ -65,15 +57,22 @@ router.put("/:id", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `UPDATE services SET name = $1, category = $2, unit = $3, price = $4, is_active = $5
-       WHERE id = $6 RETURNING *`,
-      [name, category, unit, fiyat, is_active === undefined ? true : is_active, req.params.id]
-    );
-    if (result.rows.length === 0) {
+    const hizmet = await Service.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        category,
+        unit,
+        price: fiyat,
+        is_active: is_active === undefined ? true : is_active,
+      },
+      { new: true }
+    ).catch(() => null);
+
+    if (!hizmet) {
       return res.status(404).json({ message: "Hizmet bulunamadı." });
     }
-    res.json(result.rows[0]);
+    res.json(hizmet);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Hizmet güncellenemedi." });

@@ -2,17 +2,17 @@ import {
   BadRequestException, Body, Controller, Get, Post, Req, UnauthorizedException, UseGuards,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
-import { User } from '../entities';
+import { User, UserDocument } from '../schemas';
 import { JwtGuard } from './jwt.guard';
 
 @Controller('api/auth')
 export class AuthController {
   constructor(
-    @InjectRepository(User) private kullanicilar: Repository<User>,
+    @InjectModel(User.name) private kullanicilar: Model<UserDocument>,
     private jwt: JwtService,
   ) {}
 
@@ -25,7 +25,8 @@ export class AuthController {
     }
 
     const kullanici = await this.kullanicilar.findOne({
-      where: { username: govde.username, isActive: true },
+      username: govde.username,
+      isActive: true,
     });
 
     if (!kullanici || !bcrypt.compareSync(govde.password, kullanici.passwordHash)) {
@@ -35,7 +36,7 @@ export class AuthController {
     }
 
     const token = await this.jwt.signAsync({
-      id: kullanici.id,
+      id: kullanici._id.toString(),
       username: kullanici.username,
       role: kullanici.role,
       full_name: kullanici.fullName,
@@ -44,7 +45,7 @@ export class AuthController {
     return {
       token,
       user: {
-        id: kullanici.id,
+        id: kullanici._id.toString(),
         full_name: kullanici.fullName,
         username: kullanici.username,
         role: kullanici.role,

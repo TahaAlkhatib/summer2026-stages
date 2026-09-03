@@ -26,7 +26,10 @@ class InstallmentController extends Controller
             $gun = (int) $istek->input('days', 7);
             $sorgu->where('status', '!=', 'odendi')
                   ->where('status', '!=', 'iptal')
-                  ->whereDate('due_date', '<=', now()->addDays($gun)->toDateString());
+                  // due_date "2026-09-05" biciminde metin olarak saklanir;
+                  // bu bicimdeki metinler alfabetik siralandiginda tarih sirasi
+                  // ile ayni oldugu icin dogrudan karsilastirabiliyoruz.
+                  ->where('due_date', '<=', now()->addDays($gun)->toDateString());
         }
 
         $taksitler = $sorgu->orderBy('due_date')->limit(300)->get();
@@ -93,7 +96,7 @@ class InstallmentController extends Controller
     public function refreshOverdue()
     {
         $adet = Installment::where('status', 'bekliyor')
-            ->whereDate('due_date', '<', now()->toDateString())
+            ->where('due_date', '<', now()->toDateString())
             ->update(['status' => 'gecikti']);
 
         return response()->json([

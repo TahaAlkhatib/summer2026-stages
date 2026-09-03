@@ -14,7 +14,7 @@ class CustomerController extends Controller
         if ($istek->filled('q')) {
             $arama = '%' . $istek->q . '%';
             $sorgu->where(function ($s) use ($arama) {
-                $s->where('full_name', 'ilike', $arama)->orWhere('phone', 'ilike', $arama);
+                $s->where('full_name', 'like', $arama)->orWhere('phone', 'like', $arama);
             });
         }
         if ($istek->filled('agent_id')) {

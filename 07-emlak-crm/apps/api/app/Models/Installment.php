@@ -2,11 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 class Installment extends Model
 {
+    // MongoDB'de kolon varsayilan degeri (DEFAULT) yoktur. Eloquent'in
+    // $attributes dizisi yeni kayitlara bu degerleri kendisi ekler.
+    protected $attributes = [
+        'status' => 'bekliyor',
+        'paid_amount' => 0,
+    ];
+
     protected $fillable = [
         'contract_id', 'period', 'sequence', 'due_date', 'amount',
         'paid_amount', 'paid_at', 'payment_method', 'status', 'notes',
@@ -17,8 +24,8 @@ class Installment extends Model
         return [
             'due_date' => 'date:Y-m-d',
             'paid_at' => 'date:Y-m-d',
-            'amount' => 'decimal:2',
-            'paid_amount' => 'decimal:2',
+            'amount' => 'float',
+            'paid_amount' => 'float',
         ];
     }
 

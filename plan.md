@@ -3,8 +3,10 @@
 > Bu dosya portföyün tek doğruluk kaynağıdır. Her oturumda önce bu dosya okunur,
 > iş bitince güncellenir. Kaynak kapsam: `software_projects_scope.pdf`.
 
-**Son güncelleme:** 2026-09-02
-**Durum:** 8 projenin tamamı bitti. Kalan iş: WinForms uygulamalarının Windows makinede derlenip test edilmesi.
+**Son güncelleme:** 2026-09-03
+**Durum:** 8 projenin tamamı bitti. PostgreSQL kullanan 4 proje (1, 3, 7, 8) MongoDB'ye
+taşındı ve uçtan uca yeniden doğrulandı; PostgreSQL artık hiçbir projede kullanılmıyor.
+Kalan iş: WinForms uygulamalarının Windows makinede derlenip test edilmesi.
 
 ---
 
@@ -34,26 +36,33 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 
 | # | Proje | Backend + Veritabanı | Masaüstü | Web | Mobil |
 |---|-------|----------------------|----------|-----|-------|
-| 1 | Çamaşırhane ERP | Express + PostgreSQL | **WinForms** (.NET 8) | React + Vite | **React Native** (Expo) |
+| 1 | Çamaşırhane ERP | Express + **MongoDB** (Mongoose) | **WinForms** (.NET 8) | React + Vite | **React Native** (Expo) |
 | 2 | Oto Servis | **ASP.NET Core 8** + **SQL Server** (EF Core) | — | **Next.js** | **Flutter** (tablet) |
-| 3 | Klinik PMS | **NestJS** + PostgreSQL (TypeORM) | **Electron** + React | React + Vite | **Flutter** |
+| 3 | Klinik PMS | **NestJS** + **MongoDB** (`@nestjs/mongoose`) | **Electron** + React | React + Vite | **Flutter** |
 | 4 | Spor Salonu | Express + **MySQL** | **WinForms** (.NET 8) | React + Vite | **React Native** (Expo) |
 | 5 | Araç Satış & Depo | **ASP.NET Core 8** + **SQL Server** | **WinForms** (.NET 8) | — | **Flutter** + SQLite (offline) |
 | 6 | Apart & Otel | Express + **MongoDB** (Mongoose) | — | **Next.js + Tailwind** | **React Native** (Expo) |
-| 7 | Emlak CRM | **Laravel 13** + PostgreSQL | — | **Vue 3** + Vite | **Flutter** |
-| 8 | Kargo & Dağıtım | Express + PostgreSQL | **Electron** + React | React + Vite | **React Native** (Expo) |
+| 7 | Emlak CRM | **Laravel 13** + **MongoDB** (`laravel-mongodb`) | — | **Vue 3** + Vite | **Flutter** |
+| 8 | Kargo & Dağıtım | Express + **MongoDB** (Mongoose) | **Electron** + React | React + Vite | **React Native** (Expo) |
 
 **Denge:** 4 Flutter / 4 React Native · 3 WinForms / 2 Electron · 4 Node.js / 2 .NET / 1 NestJS / 1 Laravel · React, Next.js ve Vue temsil ediliyor.
+
+**Veritabanı dağılımı:** 5 MongoDB (1, 3, 6, 7, 8) · 2 SQL Server (2, 5) · 1 MySQL (4).
+Beş MongoDB projesi aynı veritabanını **farklı katmanlarla** kullanıyor: düz
+Mongoose (1, 6, 8), `@nestjs/mongoose` (3) ve Eloquent üzerinden
+`mongodb/laravel-mongodb` (7). Bu yüzden tekrar değil, aynı veritabanının
+üç farklı çerçeveyle nasıl kullanıldığını gösteriyor.
 
 ### PDF kapsamından bilinçli sapmalar
 
 | Sapma | Sebep |
 |-------|-------|
-| **Redis kaldırıldı** (Proje 8) | Öğrenci seviyesinin çok üstünde. Aynı canlı takip işlevi düz PostgreSQL sorguları + periyodik yoklama (polling) ile yapılıyor. |
+| **Redis kaldırıldı** (Proje 8) | Öğrenci seviyesinin çok üstünde. Aynı canlı takip işlevi düz MongoDB sorguları + periyodik yoklama (polling) ile yapılıyor. |
 | **WPF kullanılmıyor**, sadece WinForms | Müşteri kararı: WPF eski/ağır. 3 masaüstü uygulaması da WinForms. |
-| **SQL Server ve MySQL Docker'da** | macOS 13 için yerel SQL Server kurulumu yok, MySQL ise Homebrew'da kaynaktan derleniyor (saatler sürüyor). PostgreSQL ve MongoDB **yerel** kurulumla kullanılıyor. |
+| **SQL Server ve MySQL Docker'da** | macOS 13 için yerel SQL Server kurulumu yok, MySQL ise Homebrew'da kaynaktan derleniyor (saatler sürüyor). MongoDB **yerel** kurulumla kullanılıyor. Öğrenci Windows'ta üçünü de normal şekilde kurar. |
+| **PostgreSQL tamamen kaldırıldı** | Müşteri kararı (2026-09-03): "postgre'yi hiç istemiyoruz". PostgreSQL kullanan 4 proje (1, 3, 7, 8) MongoDB'ye taşındı; PostgreSQL veritabanları ve rolleri silindi, servis kapatıldı. Ayrıntı: her projenin `db/README.md` dosyası. |
 | **Laravel 11 yerine Laravel 13** | PDF'te Laravel 11 yazıyordu; `composer create-project` güncel sürümü (13) kuruyor. Öğrencinin bugün kuracağı sürümle aynı olması daha faydalı. |
-| **PHP Docker imajıyla çalışıldı** | Bu Mac'te PHP yok ve macOS 13 için Homebrew kaynaktan derliyor. Teslim edilen proje düz Laravel; sadece geliştirme sırasında `bluepixel-php:8.3` imajı kullanıldı. Öğrenci Windows'ta PHP/Laragon ile normal şekilde çalıştırır. |
+| **PHP Docker imajıyla çalışıldı** | Bu Mac'te PHP yok ve macOS 13 için Homebrew kaynaktan derliyor. Teslim edilen proje düz Laravel; sadece geliştirme sırasında `bluepixel-php:8.3-mongo` imajı (php:8.3-cli + `pecl install mongodb` + composer) kullanıldı. Öğrenci Windows'ta PHP/Laragon ile normal şekilde çalıştırır. |
 
 ---
 
@@ -69,7 +78,10 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 ### Veri
 - Türkçe demo verisi: gerçekçi isimler, İstanbul/Ankara ilçeleri, `+90 5xx` telefonlar, ₺ tutarlar,
   Türkçe ürün/hizmet adları, sahte TC formatlı kimlik numaraları.
-- Her projede `db/seed` betiği ve `db/schema` (veya migration) dosyaları.
+- Her projede demo verisi yükleyen bir seed betiği/servisi bulunur. İlişkisel
+  veritabanı kullanan projelerde (2, 4, 5) `db/schema` veya migration dosyaları
+  vardır; MongoDB kullanan projelerde (1, 3, 6, 7, 8) şema dosyası yoktur —
+  koleksiyonlar ilk kayıtla oluşur ve alan tanımları model dosyalarında durur.
 
 ### Kimlik doğrulama
 - JWT (Laravel'de Sanctum). Rolleri projeye göre değişir (admin / kasiyer / kurye / teknisyen ...).
@@ -94,6 +106,8 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
   gerekli programlar ve sürümleri, veritabanı oluşturma, her uygulamanın
   kurulum/çalıştırma komutları, çalıştırma sırası, demo hesapları ve
   sık karşılaşılan sorunlar tablosu. **Proje bitmeden tamamlanmış sayılmaz.**
+- **`db/README.md`** — veritabanının nasıl kurgulandığı: koleksiyon/tablo listesi,
+  ilişkiler, demo verisinin nasıl yüklendiği ve varsa dikkat edilecek tuzaklar.
 
 ### Port dağılımı
 
@@ -112,14 +126,18 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 
 | Proje | Sunucu | Veritabanı adı |
 |-------|--------|----------------|
-| 1 | PostgreSQL (yerel) | `laundry_erp` |
+| 1 | MongoDB (yerel :27017) | `laundry_erp` |
 | 2 | SQL Server (Docker :1433) | `garage_db` |
-| 3 | PostgreSQL (yerel) | `clinic_db` |
-| 4 | MySQL (yerel) | `gym_db` |
+| 3 | MongoDB (yerel :27017) | `clinic_db` |
+| 4 | MySQL (Docker :3306) | `gym_db` |
 | 5 | SQL Server (Docker :1434) | `vansales_db` |
-| 6 | MongoDB 4.4 (yerel) | `pms_rentals` |
-| 7 | PostgreSQL (yerel) | `realestate_crm` |
-| 8 | PostgreSQL (yerel) | `courier_db` |
+| 6 | MongoDB (yerel :27017) | `pms_rentals` |
+| 7 | MongoDB (yerel :27017) | `realestate_crm` |
+| 8 | MongoDB (yerel :27017) | `courier_db` |
+
+> Beş proje aynı yerel MongoDB sunucusunda **ayrı veritabanları** kullanıyor;
+> birbirlerini etkilemezler. Öğrencinin makinesinde sadece MongoDB'nin kurulu
+> ve çalışır olması yeterlidir — elle veritabanı/tablo oluşturmak gerekmez.
 
 ---
 
@@ -129,7 +147,8 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 
 > ⚠️ **Önemli ortam notu:** Homebrew artık macOS 13 için hazır paket (bottle) yayınlamıyor.
 > Bu yüzden her `brew install` **kaynaktan derleme** yapıyor ve çok uzun sürüyor
-> (PostgreSQL bağımlılık zinciriyle birlikte ~1 saat sürdü). Sonraki kurulumlarda
+> (PostgreSQL bağımlılık zinciriyle birlikte ~1 saat sürdü — o kurulum artık
+> kullanılmıyor, bkz. aşağıdaki not). Sonraki kurulumlarda
 > (Flutter, PHP, MySQL) bunu hesaba katın; **cask** paketleri bu sorundan etkilenmez
 > (hazır indirilirler), bu yüzden mümkünse cask tercih edilmeli.
 >
@@ -158,24 +177,32 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 > EF Core paketleri **9.0.19** sürümüne sabitlendi; `dotnet add package` varsayılan
 > olarak .NET 10 gerektiren 10.x sürümlerini çekiyor.
 >
-> Kaynaktan derleme yapıldığı için Homebrew'un `initdb` adımı atlandı; veri dizini
-> elle oluşturuldu:
-> `initdb -E UTF-8 --locale=en_US.UTF-8 /usr/local/var/postgresql@16`
-> **Locale `C` bırakılmamalı** — `C` locale Türkçe karakterleri küçültmediği için
-> `ILIKE` ile "Şahin", "Öztürk" gibi aramalar sessizce boş sonuç döndürür.
+> ⚠️ **`localhost` ile `127.0.0.1` aynı şey değil (MongoDB).** Bu Mac'te yerel
+> `mongod` yalnızca `127.0.0.1:27017` (IPv4) dinliyor. Docker açıkken kullanıcının
+> `lisco-mongo` konteyneri de `*:27017` (IPv6 dahil) dinlemeye başlıyor ve
+> `localhost` önce `::1` çözüldüğü için sorgular **yanlış sunucuya**, boş bir
+> MongoDB'ye gidiyor. Doğrulama betiklerinde `mongodb://127.0.0.1:27017`
+> kullanın. Öğrencinin makinesinde böyle bir çakışma olmayacağı için
+> projelerin `.env` dosyalarında `localhost` bırakıldı.
+>
+> ⚠️ **PostgreSQL artık kullanılmıyor.** 2026-09-03'te 4 proje MongoDB'ye
+> taşındı; `laundry_erp`, `clinic_db`, `realestate_crm`, `courier_db`
+> veritabanları ve rolleri silindi, `brew services stop postgresql@16` ile servis
+> kapatıldı. Kurulum kaydı: veri dizini elle oluşturulmuştu
+> (`initdb -E UTF-8 --locale=en_US.UTF-8 /usr/local/var/postgresql@16`).
 
 | Araç | Mevcut durum | Yapılacak | Kim için |
 |------|--------------|-----------|----------|
 | Node.js 22 + npm/pnpm | ✅ kurulu | — | 1,3,4,6,8 |
-| MongoDB | ✅ yerel 4.4.0 kurulu ve çalışıyor (:27017) | — | 6 |
+| MongoDB | ✅ yerel 4.4.0 kurulu ve çalışıyor (:27017) | — | 1,3,6,7,8 |
 | Docker 20.10 | ✅ kurulu | SQL Server 2022 imajı çekilecek | 2,5 |
 | Android SDK + AVD (`Pixel_4_API_33`) | ✅ kurulu | ✅ `adb` PATH'e eklendi | tüm mobil |
 | Xcode | ✅ kurulu | (kullanılmayacak — Android hedefli) | — |
 | .NET SDK | ✅ **9.0.317** — `~/.dotnet` (sudo'suz kuruldu) | — | 2,5 + WinForms |
 | Flutter / Dart | ✅ **3.24.5** (Dart 3.5.4) — `~/flutter` | ⚠️ sürüm sabitlendi, aşağıdaki nota bakın | 2,3,5,7 |
-| PHP + Composer | ⚠️ makinede yok — **Docker imajı** `bluepixel-php:8.3` ile çalışıldı | — | 7 |
-| PostgreSQL | ✅ 16.15 kurulu ve çalışıyor | — | 1,3,7,8 |
-| MySQL | ❌ yok | `brew install mysql` | 4 |
+| PHP + Composer | ⚠️ makinede yok — **Docker imajı** `bluepixel-php:8.3-mongo` ile çalışıldı (php:8.3-cli + `pecl install mongodb`) | — | 7 |
+| PostgreSQL | ⛔ **artık kullanılmıyor** — 16.15 kurulu ama servis kapalı, veritabanları silindi | — | — |
+| MySQL | ✅ **Docker** (`sporsalonu-mysql`, mysql:8.0 :3306) — makinede yerel kurulum yok | — | 4 |
 
 ---
 
@@ -250,7 +277,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express + PostgreSQL | ✅ Tamamlandı |
+| `apps/api` | Express 5 + MongoDB (Mongoose 9, `laundry_erp`) | ✅ Tamamlandı |
 | `apps/desktop-winforms` | WinForms (net9.0-windows) — kasa, etiket | 🔵 Kod yazıldı, Windows'ta derlenecek |
 | `apps/web-admin` | React + Vite | ✅ Tamamlandı |
 | `apps/mobile` | React Native (Expo) — kurye + müşteri | ✅ Tamamlandı |
@@ -279,7 +306,7 @@ Her proje için bitiş tanımı (Definition of Done):
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | NestJS 12 + PostgreSQL (TypeORM 1.1) | ✅ Tamamlandı |
+| `apps/api` | NestJS 12 + MongoDB (`@nestjs/mongoose`, `clinic_db`) | ✅ Tamamlandı |
 | `apps/web` | React + Vite (portal) | ✅ Tamamlandı |
 | `apps/reception-desktop` | Electron 44 + React | ✅ Tamamlandı |
 | `apps/mobile` | Flutter 3.24.5 (hasta) | ✅ Tamamlandı (emülatörde test edildi) |
@@ -369,16 +396,18 @@ durumu `musait`.
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Laravel 13 + PostgreSQL (Sanctum, Eloquent) | ✅ Tamamlandı |
+| `apps/api` | Laravel 13 + MongoDB (`mongodb/laravel-mongodb` 5, Sanctum) | ✅ Tamamlandı |
 | `apps/web` | Vue 3 (Composition API) + Vite | ✅ Tamamlandı |
 | `apps/mobile` | Flutter 3.24.5 (danışman) | ✅ Tamamlandı (emülatörde test edildi) |
 
 **Projenin özü — otomatik eşleştirme ve taksit takvimi.** `Demand::eslesenPortfoyler()`
 boş bırakılan kriterleri atlayarak aktif portföyleri süzer; oda sayısı "2+1" gibi
-metin olduğu için PostgreSQL `split_part` ile ilk rakam sayıya çevrilip
-karşılaştırılır. Kira sözleşmesi açıldığında `ContractController::taksitleriOlustur()`
-aylık taksitleri tek transaction içinde üretir (`min($odemeGunu, $ay->daysInMonth)`
-ile şubat taşması engellenir) ve portföy "kiralandı" olur.
+metin olduğu için kayıtlar çekildikten sonra PHP tarafında ilk rakama göre süzülür
+(MongoDB sorgusu içinde metin parçalamak zor). Kira sözleşmesi açıldığında
+`ContractController::taksitleriOlustur()` aylık taksitleri üretir
+(`min($odemeGunu, $ay->daysInMonth)` ile şubat taşması engellenir) ve portföy
+"kiralandı" olur. Transaction kullanılmıyor: MongoDB'de çoklu belge transaction'ı
+replica set gerektirdiği için doğrulamalar yazma öncesine alındı.
 
 **Doğrulanan akışlar:** talep→eşleştirme (8 talep, eşleşme sayıları doğru) ·
 kira sözleşmesi→12 aylık taksit takvimi · aynı portföye ikinci sözleşme engeli ·
@@ -399,7 +428,7 @@ girme (emülatörde uçtan uca).
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express 5 + PostgreSQL (`courier_db`) | ✅ Tamamlandı |
+| `apps/api` | Express 5 + MongoDB (Mongoose 9, `courier_db`) | ✅ Tamamlandı |
 | `apps/desktop` | Electron 44 + React — kabul, ayrıştırma, irsaliye basımı | ✅ Tamamlandı |
 | `apps/web-merchant` | React + Vite (tacir portalı, :5108) | ✅ Tamamlandı |
 | `apps/mobile` | React Native (Expo SDK 57) — kurye | ✅ Tamamlandı (emülatörde test edildi) |
@@ -439,6 +468,7 @@ tablolarının aynı anda JOIN edilmesi satırları çarpıyordu (bir kurye içi
 | 2026-09-01 | WPF kullanılmayacak; masaüstü .NET uygulamaları WinForms (`net9.0-windows`). |
 | 2026-09-01 | Kod seviyesi: "junior-but-clean". Kod İngilizce, arayüz Türkçe. |
 | 2026-09-01 | Tek depo, 8 alt klasör. |
+| 2026-09-03 | **PostgreSQL hiç kullanılmayacak.** Proje 1, 3, 7 ve 8 MongoDB'ye taşındı. |
 
 ---
 
@@ -478,3 +508,8 @@ tablolarının aynı anda JOIN edilmesi satırları çarpıyordu (bir kurye içi
 | 2026-09-03 | Proje 6 Docker'dan yerel MongoDB'ye (:27017) taşındı — makinede zaten kurulu MongoDB 4.4 var, Docker gereksizdi. `docker-compose.yml` kaldırıldı, `.env`/README/KURULUM güncellendi, seed ve tüm uçlar yerel sunucuda doğrulandı. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |
+| 2026-09-03 | **Proje 1 PostgreSQL → MongoDB.** `db/schema.sql` silindi, `apps/api/models/` altında 8 Mongoose şeması yazıldı (`ortak.js` içindeki `toJSON` dönüşümü `_id`'yi `id` yapıyor, böylece 3 istemci uygulaması değişmedi). Transaction yerine "önce doğrula, hata olursa `deleteMany` ile temizle". `db/README.md` yazıldı. WinForms `ApiClient` ve form kodlarındaki `int` kimlikler `string` yapıldı. |
+| 2026-09-03 | **Proje 8 PostgreSQL → MongoDB.** 7 Mongoose şeması; `manifest_items` ara tablosu yerine irsaliyede gömülü `items` dizisi. JWT'ye populate edilmiş belge sızmasını önleyen `tokenUret` düzeltmesi; kurye raporunda tahsilat ayrı sorguya alındı (SQL JOIN çarpması MongoDB'de de tekrarlanmasın diye). Electron `Number(kuryeId)` çevrimleri kaldırıldı. |
+| 2026-09-03 | **Proje 3 PostgreSQL/TypeORM → MongoDB/Mongoose.** `src/entities` → `src/schemas/index.ts` (10 `@Schema()` sınıfı, koleksiyon adları elle yazıldı), 9 modül `@nestjs/mongoose`'a çevrildi, `relations` yerine elle sorgu, `Between()` yerine `$gte/$lt`, `ILike` yerine `RegExp`. **Tuzak:** `@Prop({ type: Types.ObjectId })` alanı `Mixed` yapıyor ve `find({ doctorId: '65f...' })` hiç kayıt bulmuyor — `MongoSchema.Types.ObjectId` yazılmalı. Web ve Electron'daki `Number(doktor)` çevrimleri kaldırıldı. |
+| 2026-09-03 | **Proje 7 PostgreSQL → MongoDB.** `mongodb/laravel-mongodb` 5.10 kuruldu; modeller `MongoDB\Laravel\Eloquent\Model`, `User` ise `MongoDB\Laravel\Auth\User`. Sanctum için `App\Models\PersonalAccessToken` (`DocumentModel`) yazılıp `AppServiceProvider`'da tanıtıldı. 12 göç dosyası tek bir **indeks** göçüne indirildi. `ilike`→`like`, `split_part`→PHP süzme, `SUM(a-b)` ve `GROUP BY`→PHP döngüsü, `DISTINCT`→`unique()`, `DB::transaction` kaldırıldı. Para alanları `decimal:2`→`float` (aksi hâlde metin olarak saklanıp filtreler bozuluyordu), kolon `DEFAULT`'ları model `$attributes`'ına taşındı, randevu tarihi `Carbon::parse()` ile gerçek MongoDB tarihi olarak kaydediliyor. `db/README.md` yazıldı. |
+| 2026-09-03 | PostgreSQL veritabanları (`laundry_erp`, `clinic_db`, `realestate_crm`, `courier_db`) ve rolleri silindi; `postgresql@16` servisi kapatıldı. Docker da kapatıldı (yalnızca PHP araç zinciri için açılmıştı). |

@@ -49,7 +49,7 @@ function NewAppointment() {
     try {
       const cevap = await api.post("/appointments", {
         patientId: secilenHasta.id,
-        doctorId: Number(doktor),
+        doctorId: doktor,
         startsAt: tarih + "T" + secilenSaat + ":00",
         note: not,
       });

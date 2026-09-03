@@ -12,13 +12,14 @@ class PropertyController extends Controller
         $sorgu = Property::with(['owner', 'agent']);
 
         if ($istek->filled('q')) {
-            // ILIKE: PostgreSQL'de büyük/küçük harf duyarsız arama
+            // MongoDB'de 'like' operatörü büyük/küçük harf duyarsız bir
+            // düzenli ifadeye (regex) çevrilir
             $arama = '%' . $istek->q . '%';
             $sorgu->where(function ($s) use ($arama) {
-                $s->where('title', 'ilike', $arama)
-                  ->orWhere('code', 'ilike', $arama)
-                  ->orWhere('district', 'ilike', $arama)
-                  ->orWhere('neighborhood', 'ilike', $arama);
+                $s->where('title', 'like', $arama)
+                  ->orWhere('code', 'like', $arama)
+                  ->orWhere('district', 'like', $arama)
+                  ->orWhere('neighborhood', 'like', $arama);
             });
         }
         if ($istek->filled('listing_type')) {
@@ -37,7 +38,8 @@ class PropertyController extends Controller
             $sorgu->where('agent_id', $istek->agent_id);
         }
         if ($istek->filled('max_price')) {
-            $sorgu->where('price', '<=', $istek->max_price);
+            // MongoDB metinle sayıyı karşılaştırmaz; (float) çevrimi şart
+            $sorgu->where('price', '<=', (float) $istek->max_price);
         }
 
         return $sorgu->orderByDesc('created_at')->limit(200)->get();
@@ -96,6 +98,11 @@ class PropertyController extends Controller
         $veri['code'] = Property::yeniKod();
         $veri['status'] = 'aktif';
 
+        // MongoDB gelen değeri olduğu gibi saklar. Form'dan metin gelirse
+        // fiyat "1500000" diye metin olarak yazılır ve fiyat filtreleri
+        // çalışmaz; bu yüzden sayısal alanları burada çeviriyoruz.
+        $veri = $this->sayilariCevir($veri);
+
         $portfoy = Property::create($veri);
 
         return response()->json($portfoy->load(['owner', 'agent']), 201);
@@ -114,7 +121,7 @@ class PropertyController extends Controller
             'dues' => 'nullable|numeric|min:0',
         ]);
 
-        $property->update($veri);
+        $property->update($this->sayilariCevir($veri));
 
         return $property->load(['owner', 'agent']);
     }
@@ -134,9 +141,30 @@ class PropertyController extends Controller
         return response()->json(['message' => 'Portföy silindi.']);
     }
 
+    // Sayısal alanları metinden sayıya çevirir (MongoDB için gerekli)
+    private function sayilariCevir(array $veri): array
+    {
+        foreach (['price', 'dues'] as $alan) {
+            if (isset($veri[$alan])) {
+                $veri[$alan] = (float) $veri[$alan];
+            }
+        }
+        foreach (['gross_area', 'floor', 'building_age'] as $alan) {
+            if (isset($veri[$alan])) {
+                $veri[$alan] = (int) $veri[$alan];
+            }
+        }
+        return $veri;
+    }
+
     // Filtre kutularını doldurmak için ilçe listesi
     public function districts()
     {
-        return Property::select('district')->distinct()->orderBy('district')->pluck('district');
+        // MongoDB'de "SELECT DISTINCT" yok; ilçe alanını çekip tekilleştiriyoruz
+        return Property::orderBy('district')
+            ->pluck('district')
+            ->filter()
+            ->unique()
+            ->values();
     }
 }

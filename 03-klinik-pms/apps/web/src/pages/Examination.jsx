@@ -38,7 +38,7 @@ function Examination() {
     setHata("");
     try {
       await api.post("/records", {
-        appointmentId: Number(randevuId),
+        appointmentId: randevuId,
         complaint: sikayet,
         diagnosis: tani,
         treatmentNote: tedaviNotu,

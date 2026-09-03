@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
@@ -48,9 +49,14 @@ class AppointmentController extends Controller
             'scheduled_at.required' => 'Randevu tarihi ve saati zorunludur.',
         ]);
 
+        // DİKKAT: MongoDB'de tarih alanı gerçek bir tarih tipiyle saklanmalı.
+        // Metin olarak kaydedilirse tarih filtreleri (whereDate) çalışmaz.
+        $randevuZamani = Carbon::parse($veri['scheduled_at']);
+        $veri['scheduled_at'] = $randevuZamani;
+
         // Aynı danışmanın aynı saatte başka randevusu olmasın (±1 saat)
-        $baslangic = date('Y-m-d H:i:s', strtotime($veri['scheduled_at'] . ' -59 minutes'));
-        $bitis = date('Y-m-d H:i:s', strtotime($veri['scheduled_at'] . ' +59 minutes'));
+        $baslangic = $randevuZamani->copy()->subMinutes(59);
+        $bitis = $randevuZamani->copy()->addMinutes(59);
 
         $cakisan = Appointment::where('agent_id', $veri['agent_id'])
             ->where('status', 'planlandi')

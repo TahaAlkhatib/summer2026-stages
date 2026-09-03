@@ -17,7 +17,7 @@ adımları içerir. Projede **dört uygulama** var:
 | Program | Sürüm | Nereden indirilir | Hangi uygulama için |
 |---------|-------|-------------------|---------------------|
 | **Node.js** | 20+ | https://nodejs.org | Hepsi |
-| **PostgreSQL** | 14+ | https://www.postgresql.org/download/ | Veritabanı |
+| **MongoDB** | 4.4+ | https://www.mongodb.com/try/download/community | Veritabanı |
 | **Android Studio** | güncel | https://developer.android.com/studio | Kurye uygulaması emülatörü |
 | **Expo Go** (isteğe bağlı) | güncel | Play Store | Gerçek telefonda deneme |
 
@@ -25,36 +25,47 @@ Kontrol:
 
 ```bash
 node --version      # v20 veya üzeri
-psql --version
+mongod --version    # 4.4 veya üzeri
 ```
+
+> **MongoDB kurulumu.** Windows'ta MongoDB Community Server kurulumu servisi
+> otomatik başlatır. macOS'ta Homebrew ile:
+> ```bash
+> brew tap mongodb/brew
+> brew install mongodb-community
+> brew services start mongodb-community
+> ```
 
 ---
 
-## 2. Veritabanı (PostgreSQL)
+## 2. Veritabanı (MongoDB)
 
-Kullanıcı ve veritabanını oluşturun:
-
-```bash
-psql -U postgres
-```
-
-```sql
-CREATE USER courier_user WITH PASSWORD 'courier123';
-CREATE DATABASE courier_db OWNER courier_user ENCODING 'UTF8' TEMPLATE template0;
-\q
-```
-
-> **Encoding UTF-8 olmalı.** `C` locale ile açılan bir veritabanında `ILIKE`
-> ile "Şahin", "Öztürk" gibi Türkçe aramalar sessizce boş sonuç döner.
-
-Tabloları oluşturun:
+MongoDB servisinin çalıştığından emin olun:
 
 ```bash
-psql -U courier_user -d courier_db -f db/schema.sql
+# macOS
+brew services list | grep mongodb
+
+# Windows (PowerShell, yönetici)
+Get-Service MongoDB
 ```
 
-> Betik dosyanın başında tabloları **siler** (`DROP TABLE IF EXISTS`), yani
-> veritabanını sıfırlamak için tekrar çalıştırabilirsiniz.
+Bağlantı kontrolü:
+
+```bash
+mongosh --eval "db.version()"     # eski sürümlerde: mongo --eval "db.version()"
+```
+
+**Elle veritabanı veya koleksiyon oluşturmanıza gerek yok.** MongoDB ilk
+kayıt eklendiğinde `courier_db` veritabanını ve koleksiyonları kendisi
+oluşturur. Alan tanımları `apps/api/models/` klasöründeki Mongoose
+şemalarındadır (ayrıntı için `db/README.md`).
+
+Bağlantı adresi `apps/api/.env` içinde:
+
+```
+MONGO_URL=mongodb://localhost:27017/courier_db
+```
 
 ---
 
@@ -206,8 +217,7 @@ export const TEMEL_ADRES = "http://10.0.2.2:3108/api";
 ## 9. Çalıştırma Sırası (özet)
 
 ```bash
-# 1. Veritabanı
-psql -U courier_user -d courier_db -f db/schema.sql
+# 1. Veritabanı — MongoDB servisi çalışıyor olmalı
 
 # 2. API  (yeni terminal)
 cd apps/api && npm install && npm run seed && npm start
@@ -228,8 +238,8 @@ cd apps/mobile && npm install && npx expo start
 
 | Sorun | Çözüm |
 |-------|-------|
-| `ECONNREFUSED ... 5432` | PostgreSQL çalışmıyor veya `.env` içindeki bağlantı yanlış |
-| `relation "shipments" does not exist` | `db/schema.sql` çalıştırılmamış |
+| `MongoDB bağlantısı kurulamadı` | MongoDB servisi çalışıyor mu? `.env` içindeki `MONGO_URL` doğru mu? |
+| Liste boş geliyor | Demo verisi yüklenmemiş olabilir: `cd apps/api && npm run seed` |
 | Electron penceresi açılmıyor | İlk kurulumda binary indirmesi bitmemiş olabilir; `npm install` çıktısını bekleyin |
 | Electron indirmesi çok uzun sürüyor | `npm run vite` ile arayüzü tarayıcıda açabilirsiniz (http://localhost:5118) |
 | Mobilde `Sunucuya bağlanılamadı` | Emülatörde adres `10.0.2.2` olmalı, `localhost` değil |

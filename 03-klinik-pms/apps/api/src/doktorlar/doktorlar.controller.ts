@@ -1,44 +1,48 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { Appointment, Doctor } from '../entities';
+import {
+  Appointment, AppointmentDocument, Doctor, DoctorDocument, User, UserDocument,
+} from '../schemas';
 import { JwtGuard } from '../auth/jwt.guard';
+import { gunBasi, gunSonu } from '../tarih';
 
 @Controller('api/doctors')
 @UseGuards(JwtGuard)
 export class DoktorlarController {
   constructor(
-    @InjectRepository(Doctor) private doktorlar: Repository<Doctor>,
-    @InjectRepository(Appointment) private randevular: Repository<Appointment>,
+    @InjectModel(Doctor.name) private doktorlar: Model<DoctorDocument>,
+    @InjectModel(User.name) private kullanicilar: Model<UserDocument>,
+    @InjectModel(Appointment.name) private randevular: Model<AppointmentDocument>,
   ) {}
 
   @Get()
   async listele() {
-    const liste = await this.doktorlar.find({
-      where: { isActive: true },
-      relations: { user: true },
-      order: { branch: 'ASC' },
-    });
+    const liste = await this.doktorlar.find({ isActive: true }).sort({ branch: 1 });
 
-    return liste.map((d) => ({
-      id: d.id,
-      full_name: d.user?.fullName,
-      branch: d.branch,
-      examination_fee: Number(d.examinationFee),
-    }));
+    const cevap = [];
+    for (const d of liste) {
+      const kullanici = await this.kullanicilar.findById(d.userId);
+      cevap.push({
+        id: d._id.toString(),
+        full_name: kullanici?.fullName,
+        branch: d.branch,
+        examination_fee: Number(d.examinationFee),
+      });
+    }
+    return cevap;
   }
 
   // Bir doktorun belirli gündeki boş randevu saatleri
   @Get(':id/slots')
-  async bosSaatler(@Param('id') id: number, @Query('date') tarih: string) {
-    const gun = tarih ? new Date(tarih + 'T00:00:00') : new Date();
-    gun.setHours(0, 0, 0, 0);
-    const gunSonu = new Date(gun);
-    gunSonu.setDate(gunSonu.getDate() + 1);
+  async bosSaatler(@Param('id') id: string, @Query('date') tarih: string) {
+    const bas = gunBasi(tarih || undefined);
+    const bit = gunSonu(tarih || undefined);
 
     const doluRandevular = await this.randevular.find({
-      where: { doctorId: id, startsAt: Between(gun, gunSonu) },
+      doctorId: id,
+      startsAt: { $gte: bas, $lt: bit },
     });
 
     // İptal edilen randevunun saati tekrar açılır
@@ -57,6 +61,6 @@ export class DoktorlarController {
       });
     }
 
-    return { date: tarih, doctor_id: Number(id), slots: slotlar };
+    return { date: tarih, doctor_id: id, slots: slotlar };
   }
 }

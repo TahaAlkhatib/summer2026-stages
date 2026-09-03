@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 
 import {
-  Appointment, Doctor, Invoice, MedicalRecord, Patient, Payment,
-  Prescription, Supply, SupplyUsage, User,
-} from './entities';
+  Appointment, AppointmentSchema, Doctor, DoctorSchema, Invoice, InvoiceSchema,
+  MedicalRecord, MedicalRecordSchema, Patient, PatientSchema, Payment, PaymentSchema,
+  Prescription, PrescriptionSchema, Supply, SupplySchema, SupplyUsage, SupplyUsageSchema,
+  User, UserSchema,
+} from './schemas';
 
 import { AuthModule } from './auth/auth.module';
 import { HastalarModule } from './hastalar/hastalar.module';
@@ -18,27 +20,29 @@ import { RaporlarModule } from './raporlar/raporlar.module';
 import { HastaPortalModule } from './hasta-portal/hasta-portal.module';
 import { SeedService } from './seed/seed.service';
 
+// Bütün modellerin listesi — hem kök modül hem seed servisi kullanıyor
+export const TUM_MODELLER = [
+  { name: User.name, schema: UserSchema },
+  { name: Patient.name, schema: PatientSchema },
+  { name: Doctor.name, schema: DoctorSchema },
+  { name: Appointment.name, schema: AppointmentSchema },
+  { name: MedicalRecord.name, schema: MedicalRecordSchema },
+  { name: Prescription.name, schema: PrescriptionSchema },
+  { name: Supply.name, schema: SupplySchema },
+  { name: SupplyUsage.name, schema: SupplyUsageSchema },
+  { name: Invoice.name, schema: InvoiceSchema },
+  { name: Payment.name, schema: PaymentSchema },
+];
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [
-        User, Patient, Doctor, Appointment, MedicalRecord,
-        Prescription, Supply, SupplyUsage, Invoice, Payment,
-      ],
-      // Öğrenci projesi olduğu için migration yerine otomatik şema kullanılıyor
-      synchronize: true,
-    }),
-    TypeOrmModule.forFeature([
-      User, Patient, Doctor, Appointment, MedicalRecord,
-      Prescription, Supply, SupplyUsage, Invoice, Payment,
-    ]),
+    // MongoDB'de tablo/şema oluşturmaya gerek yok; koleksiyonlar
+    // ilk kayıtta otomatik oluşur.
+    MongooseModule.forRoot(
+      process.env.MONGO_URL || 'mongodb://localhost:27017/clinic_db',
+    ),
+    MongooseModule.forFeature(TUM_MODELLER),
     AuthModule,
     HastalarModule,
     DoktorlarModule,

@@ -2,12 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 class Demand extends Model
 {
+    // MongoDB'de kolon varsayilan degeri (DEFAULT) yoktur. Eloquent'in
+    // $attributes dizisi yeni kayitlara bu degerleri kendisi ekler.
+    protected $attributes = [
+        'status' => 'aktif',
+        'needs_parking' => false,
+    ];
+
     protected $fillable = [
         'customer_id', 'listing_type', 'property_type', 'district',
         'min_price', 'max_price', 'min_area', 'min_room_count',
@@ -17,8 +24,8 @@ class Demand extends Model
     protected function casts(): array
     {
         return [
-            'min_price' => 'decimal:2',
-            'max_price' => 'decimal:2',
+            'min_price' => 'float',
+            'max_price' => 'float',
             'needs_parking' => 'boolean',
         ];
     }
@@ -42,24 +49,33 @@ class Demand extends Model
         if ($this->district) {
             $sorgu->where('district', $this->district);
         }
+        // DİKKAT: MongoDB metinle sayıyı karşılaştırmaz. Tutarlar "decimal"
+        // dönüştürücüsü yüzünden metin geldiği için (float) ile çeviriyoruz.
         if ($this->min_price) {
-            $sorgu->where('price', '>=', $this->min_price);
+            $sorgu->where('price', '>=', (float) $this->min_price);
         }
         if ($this->max_price) {
-            $sorgu->where('price', '<=', $this->max_price);
+            $sorgu->where('price', '<=', (float) $this->max_price);
         }
         if ($this->min_area) {
-            $sorgu->where('gross_area', '>=', $this->min_area);
+            $sorgu->where('gross_area', '>=', (int) $this->min_area);
         }
         if ($this->needs_parking) {
             $sorgu->where('has_parking', true);
         }
-        // Oda sayısı "2+1" gibi metin; ilk rakamı sayıya çevirip karşılaştırıyoruz
+        $portfoyler = $sorgu->orderBy('price')->get();
+
+        // Oda sayısı "2+1" gibi metin olarak saklanıyor. MongoDB sorgusu içinde
+        // metni parçalayıp sayıya çevirmek zor; kayıtları çektikten sonra PHP
+        // tarafında süzüyoruz.
         if ($this->min_room_count) {
             $enAz = (int) $this->min_room_count;
-            $sorgu->whereRaw("CAST(split_part(room_count, '+', 1) AS INTEGER) >= ?", [$enAz]);
+            $portfoyler = $portfoyler->filter(function ($portfoy) use ($enAz) {
+                $odaSayisi = (int) explode('+', (string) $portfoy->room_count)[0];
+                return $odaSayisi >= $enAz;
+            })->values();
         }
 
-        return $sorgu->orderBy('price')->get();
+        return $portfoyler;
     }
 }

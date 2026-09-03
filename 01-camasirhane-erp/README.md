@@ -16,7 +16,7 @@ Böylece iş kuralları tek yerde toplanır ve her istemci bağımsız olarak ç
 
 ```
                         ┌──────────────────────┐
-                        │     PostgreSQL       │
+                        │      MongoDB         │
                         │     laundry_erp      │
                         └──────────▲───────────┘
                                    │
@@ -40,7 +40,7 @@ Böylece iş kuralları tek yerde toplanır ve her istemci bağımsız olarak ç
 
 | Uygulama | Teknoloji | Klasör |
 |----------|-----------|--------|
-| API | Node.js 22, Express 5, PostgreSQL 16, JWT | `apps/api` |
+| API | Node.js 22, Express 5, MongoDB + Mongoose 9, JWT | `apps/api` |
 | Web Yönetim Paneli | React 19, Vite, React Router, Axios | `apps/web-admin` |
 | Mobil Uygulama | React Native, Expo SDK 57, React Navigation | `apps/mobile` |
 | Kasa Uygulaması | C# WinForms (.NET 9), ZXing (Code128) | `apps/desktop-winforms` |
@@ -120,18 +120,26 @@ Böylece iş kuralları tek yerde toplanır ve her istemci bağımsız olarak ç
 
 ---
 
-## Veritabanı Şeması
+## Veritabanı (MongoDB)
 
-| Tablo | Açıklama |
-|-------|----------|
+Alan tanımları `apps/api/models/` klasöründeki Mongoose şemalarındadır.
+Ayrıntılı açıklama: [`db/README.md`](db/README.md)
+
+| Koleksiyon | Açıklama |
+|------------|----------|
 | `users` | Personel: yönetici, kasiyer, kurye |
 | `customers` | Müşteriler (ad, telefon, adres, ilçe) |
 | `services` | Hizmetler ve fiyatlar (yıkama, kuru temizleme, ütü, leke) |
 | `orders` | Siparişler: durum, teslim tipi, tutar, ödenen, söz verilen tarih |
-| `order_items` | Sipariş kalemleri — her satırın kendi barkodu vardır |
-| `order_status_history` | Aşama değişiklik geçmişi (kim, ne zaman, hangi not) |
-| `courier_tasks` | Kurye alma/teslim görevleri |
+| `orderitems` | Sipariş kalemleri — her kaydın kendi barkodu vardır |
+| `orderstatushistories` | Aşama değişiklik geçmişi (kim, ne zaman, hangi not) |
+| `couriertasks` | Kurye alma/teslim görevleri |
 | `payments` | Tahsilatlar (nakit / kart / havale) |
+
+Koleksiyonlar arası bağ `ObjectId` + `ref` ile kurulur, ilgili belge
+`.populate()` ile çekilir. Kayıt kimliği MongoDB'de `_id` alanında tutulur;
+API cevaplarında istemcilerin beklediği `id` alanına dönüştürülür
+(`models/ortak.js`).
 
 ---
 

@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const pool = require("./db");
+const User = require("./models/User");
 
 const router = express.Router();
 
@@ -14,30 +14,36 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      "SELECT * FROM users WHERE username = $1 AND is_active = true",
-      [username]
-    );
+    const user = await User.findOne({ username: username, is_active: true });
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(401).json({ message: "Kullanıcı adı veya şifre hatalı." });
     }
 
-    const user = result.rows[0];
     const ok = bcrypt.compareSync(password, user.password_hash);
     if (!ok) {
       return res.status(401).json({ message: "Kullanıcı adı veya şifre hatalı." });
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role, full_name: user.full_name },
+      {
+        id: user._id.toString(),
+        username: user.username,
+        role: user.role,
+        full_name: user.full_name,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "12h" }
     );
 
     res.json({
       token: token,
-      user: { id: user.id, full_name: user.full_name, username: user.username, role: user.role },
+      user: {
+        id: user._id.toString(),
+        full_name: user.full_name,
+        username: user.username,
+        role: user.role,
+      },
     });
   } catch (err) {
     console.error(err);

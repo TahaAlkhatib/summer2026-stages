@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const { baglan } = require("./db");
 const auth = require("./auth");
 
 const app = express();
@@ -22,6 +23,15 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/track", require("./routes/track"));
 
 const port = process.env.PORT || 3101;
-app.listen(port, () => {
-  console.log("Çamaşırhane API çalışıyor: http://localhost:" + port);
-});
+
+// Önce veritabanına bağlan, sonra sunucuyu başlat
+baglan()
+  .then(() => {
+    app.listen(port, () => {
+      console.log("Çamaşırhane API çalışıyor: http://localhost:" + port);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB bağlantısı kurulamadı:", err.message);
+    process.exit(1);
+  });

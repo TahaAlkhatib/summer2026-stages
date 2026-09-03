@@ -2,12 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
+use MongoDB\Laravel\Relations\HasMany;
 
 class Contract extends Model
 {
+    // MongoDB'de kolon varsayilan degeri (DEFAULT) yoktur. Eloquent'in
+    // $attributes dizisi yeni kayitlara bu degerleri kendisi ekler.
+    protected $attributes = [
+        'status' => 'aktif',
+        // Satis sozlesmesinde bitis tarihi yoktur; alanin cevapta her zaman
+        // gorunmesi icin bos deger tanimliyoruz (MongoDB olmayan alani
+        // JSON'a hic koymaz).
+        'end_date' => null,
+        'payment_day' => null,
+        'duration_months' => null,
+        'deposit' => 0,
+        'commission_rate' => 0,
+        'commission_amount' => 0,
+    ];
+
     protected $fillable = [
         'code', 'type', 'property_id', 'customer_id', 'owner_id', 'agent_id',
         'start_date', 'end_date', 'amount', 'deposit', 'payment_day',
@@ -20,10 +35,13 @@ class Contract extends Model
         return [
             'start_date' => 'date:Y-m-d',
             'end_date' => 'date:Y-m-d',
-            'amount' => 'decimal:2',
-            'deposit' => 'decimal:2',
-            'commission_rate' => 'decimal:2',
-            'commission_amount' => 'decimal:2',
+            // MongoDB'de tutarlar sayi olarak saklanmali. 'decimal:2'
+            // donusturucusu degeri metne cevirdigi icin karsilastirma ve
+            // toplama islemleri bozulurdu; bu yuzden 'float' kullaniyoruz.
+            'amount' => 'float',
+            'deposit' => 'float',
+            'commission_rate' => 'float',
+            'commission_amount' => 'float',
         ];
     }
 

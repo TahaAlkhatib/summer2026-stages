@@ -32,7 +32,7 @@
                 });
 
                 EklenenMusteri = new MusteriOge();
-                EklenenMusteri.Id = ApiClient.Tam(yeni, "id");
+                EklenenMusteri.Id = ApiClient.Metin(yeni, "id");
                 EklenenMusteri.Ad = ApiClient.Metin(yeni, "full_name");
                 EklenenMusteri.Telefon = ApiClient.Metin(yeni, "phone");
                 EklenenMusteri.Adres = ApiClient.Metin(yeni, "address");

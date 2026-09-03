@@ -6,7 +6,6 @@ use App\Models\Contract;
 use App\Models\Installment;
 use App\Models\Property;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ContractController extends Controller
 {
@@ -91,41 +90,41 @@ class ContractController extends Controller
             ? $veri['amount'] * $oran / 100
             : $veri['amount'] * $oran / 100;
 
-        $sozlesme = DB::transaction(function () use ($veri, $portfoy, $oran, $komisyon) {
-            $sure = (int) ($veri['duration_months'] ?? 0);
+        // NOT: MongoDB'de çoklu belge transaction'ı yalnızca replica set
+        // kurulumunda çalışır; tek sunucu kurulumunda hata verir. Bu yüzden
+        // kayıtlar sırayla yazılıyor — doğrulamalar yukarıda bitti, buradan
+        // sonra hata beklenmiyor.
+        $sure = (int) ($veri['duration_months'] ?? 0);
 
-            $sozlesme = Contract::create([
-                'code' => Contract::yeniKod(),
-                'type' => $veri['type'],
-                'property_id' => $portfoy->id,
-                'customer_id' => $veri['customer_id'],
-                'owner_id' => $portfoy->owner_id,
-                'agent_id' => $veri['agent_id'],
-                'start_date' => $veri['start_date'],
-                'end_date' => $veri['type'] === 'kira'
-                    ? date('Y-m-d', strtotime($veri['start_date'] . " +$sure months -1 day"))
-                    : null,
-                'amount' => $veri['amount'],
-                'deposit' => $veri['deposit'] ?? 0,
-                'payment_day' => $veri['payment_day'] ?? null,
-                'duration_months' => $sure ?: null,
-                'commission_rate' => $oran,
-                'commission_amount' => $komisyon,
-                'status' => 'aktif',
-                'notes' => $veri['notes'] ?? null,
-            ]);
+        $sozlesme = Contract::create([
+            'code' => Contract::yeniKod(),
+            'type' => $veri['type'],
+            'property_id' => $portfoy->id,
+            'customer_id' => $veri['customer_id'],
+            'owner_id' => $portfoy->owner_id,
+            'agent_id' => $veri['agent_id'],
+            'start_date' => $veri['start_date'],
+            'end_date' => $veri['type'] === 'kira'
+                ? date('Y-m-d', strtotime($veri['start_date'] . " +$sure months -1 day"))
+                : null,
+            'amount' => (float) $veri['amount'],
+            'deposit' => (float) ($veri['deposit'] ?? 0),
+            'payment_day' => $veri['payment_day'] ?? null,
+            'duration_months' => $sure ?: null,
+            'commission_rate' => $oran,
+            'commission_amount' => $komisyon,
+            'status' => 'aktif',
+            'notes' => $veri['notes'] ?? null,
+        ]);
 
-            // Kira sözleşmesinde taksit takvimi OTOMATIK üretilir
-            if ($veri['type'] === 'kira') {
-                $this->taksitleriOlustur($sozlesme);
-            }
+        // Kira sözleşmesinde taksit takvimi OTOMATIK üretilir
+        if ($veri['type'] === 'kira') {
+            $this->taksitleriOlustur($sozlesme);
+        }
 
-            $portfoy->update([
-                'status' => $veri['type'] === 'satis' ? 'satildi' : 'kiralandi',
-            ]);
-
-            return $sozlesme;
-        });
+        $portfoy->update([
+            'status' => $veri['type'] === 'satis' ? 'satildi' : 'kiralandi',
+        ]);
 
         return response()->json(
             $sozlesme->load(['property', 'customer', 'owner', 'agent', 'installments']),
@@ -160,20 +159,18 @@ class ContractController extends Controller
             return response()->json(['message' => 'Bu sözleşme zaten kapalı.'], 400);
         }
 
-        DB::transaction(function () use ($contract, $istek) {
-            $contract->update([
-                'status' => 'feshedildi',
-                'notes' => trim(($contract->notes ?? '') . "\nFesih: " . $istek->input('reason', '-')),
-            ]);
+        $contract->update([
+            'status' => 'feshedildi',
+            'notes' => trim(($contract->notes ?? '') . "\nFesih: " . $istek->input('reason', '-')),
+        ]);
 
-            // Ödenmemiş taksitler iptal olsun
-            $contract->installments()
-                ->where('status', '!=', 'odendi')
-                ->update(['status' => 'iptal']);
+        // Ödenmemiş taksitler iptal olsun
+        $contract->installments()
+            ->where('status', '!=', 'odendi')
+            ->update(['status' => 'iptal']);
 
-            // Portföy tekrar satışa/kiraya açılır
-            $contract->property()->update(['status' => 'aktif']);
-        });
+        // Portföy tekrar satışa/kiraya açılır
+        $contract->property()->update(['status' => 'aktif']);
 
         return response()->json(['message' => 'Sözleşme feshedildi, portföy tekrar aktif.']);
     }
