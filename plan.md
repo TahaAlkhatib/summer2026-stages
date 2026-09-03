@@ -51,10 +51,9 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 |-------|-------|
 | **Redis kaldırıldı** (Proje 8) | Öğrenci seviyesinin çok üstünde. Aynı canlı takip işlevi düz PostgreSQL sorguları + periyodik yoklama (polling) ile yapılıyor. |
 | **WPF kullanılmıyor**, sadece WinForms | Müşteri kararı: WPF eski/ağır. 3 masaüstü uygulaması da WinForms. |
-| **SQL Server ve MySQL Docker'da** | macOS 13 için yerel kurulum yok / kaynaktan derleme saatler sürüyor. |
+| **SQL Server ve MySQL Docker'da** | macOS 13 için yerel SQL Server kurulumu yok, MySQL ise Homebrew'da kaynaktan derleniyor (saatler sürüyor). PostgreSQL ve MongoDB **yerel** kurulumla kullanılıyor. |
 | **Laravel 11 yerine Laravel 13** | PDF'te Laravel 11 yazıyordu; `composer create-project` güncel sürümü (13) kuruyor. Öğrencinin bugün kuracağı sürümle aynı olması daha faydalı. |
 | **PHP Docker imajıyla çalışıldı** | Bu Mac'te PHP yok ve macOS 13 için Homebrew kaynaktan derliyor. Teslim edilen proje düz Laravel; sadece geliştirme sırasında `bluepixel-php:8.3` imajı kullanıldı. Öğrenci Windows'ta PHP/Laragon ile normal şekilde çalıştırır. |
-| **MongoDB de Docker'da (:27018)** | Bu makinede 27017 portu başka bir projenin konteynerinde. Docker + farklı port, hem çakışmayı hem de ayrı kurulum gereğini ortadan kaldırıyor. |
 
 ---
 
@@ -105,7 +104,7 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 | 3 | 3103 | 5103 | Electron |
 | 4 | 3104 | 5104 | — |
 | 5 | 5105 | — | SQL Server 1434 |
-| 6 | 3106 | 3116 (Next.js) | MongoDB 27018 |
+| 6 | 3106 | 3116 (Next.js) | — |
 | 7 | 8107 | 5107 | — |
 | 8 | 3108 | 5108 | Electron |
 
@@ -118,7 +117,7 @@ Her projenin kendi içinde tutarlı, projeler arasında ise çeşitli olmasına 
 | 3 | PostgreSQL (yerel) | `clinic_db` |
 | 4 | MySQL (yerel) | `gym_db` |
 | 5 | SQL Server (Docker :1434) | `vansales_db` |
-| 6 | MongoDB 7 (Docker :27018) | `pms_rentals` |
+| 6 | MongoDB 4.4 (yerel) | `pms_rentals` |
 | 7 | PostgreSQL (yerel) | `realestate_crm` |
 | 8 | PostgreSQL (yerel) | `courier_db` |
 
@@ -168,7 +167,7 @@ Bu Mac: macOS 13.7.8 (Ventura), **Intel (x86_64)**.
 | Araç | Mevcut durum | Yapılacak | Kim için |
 |------|--------------|-----------|----------|
 | Node.js 22 + npm/pnpm | ✅ kurulu | — | 1,3,4,6,8 |
-| MongoDB | ✅ yerel 4.4 kurulu, **proje 6 Docker mongo:7 (:27018) kullanıyor** | — | 6 |
+| MongoDB | ✅ yerel 4.4.0 kurulu ve çalışıyor (:27017) | — | 6 |
 | Docker 20.10 | ✅ kurulu | SQL Server 2022 imajı çekilecek | 2,5 |
 | Android SDK + AVD (`Pixel_4_API_33`) | ✅ kurulu | ✅ `adb` PATH'e eklendi | tüm mobil |
 | Xcode | ✅ kurulu | (kullanılmayacak — Android hedefli) | — |
@@ -341,7 +340,7 @@ mal girişi, yeni ürün), `YuklemeForm` (depodan araca yükleme), `AraclarForm`
 
 | Uygulama | Teknoloji | Durum |
 |----------|-----------|-------|
-| `apps/api` | Express 5 + MongoDB 7 (Mongoose, Docker :27018) | ✅ Tamamlandı |
+| `apps/api` | Express 5 + MongoDB 4.4 (yerel, Mongoose 9) | ✅ Tamamlandı |
 | `apps/web` | Next.js 16 (App Router) + Tailwind CSS 4 | ✅ Tamamlandı |
 | `apps/mobile` | React Native (Expo SDK 57) — temizlik/bakım ekibi | ✅ Tamamlandı (emülatörde test edildi) |
 
@@ -476,5 +475,6 @@ tablolarının aynı anda JOIN edilmesi satırları çarpıyordu (bir kurye içi
 | 2026-09-02 | Proje 6 tamamlandı: Express+MongoDB API, Next.js sürükle-bırak oda takvimi, Expo görev uygulaması (emülatörde doğrulandı), README/KURULUM + 12 ekran görüntüsü. |
 | 2026-09-02 | Proje 7 tamamlandı: Laravel 13 + PostgreSQL API, Vue 3 yönetim paneli, Flutter danışman uygulaması, README/KURULUM + 16 ekran görüntüsü. |
 | 2026-09-02 | Proje 8 tamamlandı: Express+PostgreSQL API, Electron şube uygulaması (Code 39 barkod + irsaliye basımı), React tacir portalı, Expo kurye uygulaması (OTP + imza + COD). 8 projenin tamamı bitti. |
+| 2026-09-03 | Proje 6 Docker'dan yerel MongoDB'ye (:27017) taşındı — makinede zaten kurulu MongoDB 4.4 var, Docker gereksizdi. `docker-compose.yml` kaldırıldı, `.env`/README/KURULUM güncellendi, seed ve tüm uçlar yerel sunucuda doğrulandı. |
 | 2026-09-02 | Tarih hatası düzeltildi: `toISOString()` UTC döndürdüğü için gece 00:00-03:00 arasında gün sonu raporu yanlış günü gösteriyordu. Yerel tarih hesabına geçildi. |
 | 2026-09-01 | Faz 0: PostgreSQL 16.15 kuruldu (kaynaktan derlendi), `initdb` elle yapıldı (UTF-8 / en_US), `laundry_erp` veritabanı ve `laundry_user` rolü oluşturuldu. |

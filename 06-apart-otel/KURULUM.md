@@ -10,7 +10,7 @@ adımları içerir.
 | Program | Sürüm | Nereden indirilir | Hangi uygulama için |
 |---------|-------|-------------------|---------------------|
 | **Node.js** | 20+ | https://nodejs.org | API, Web paneli, Mobil |
-| **Docker Desktop** | güncel | https://www.docker.com/products/docker-desktop/ | MongoDB |
+| **MongoDB** | 4.4+ | https://www.mongodb.com/try/download/community | Veritabanı |
 | **Android Studio** | güncel | https://developer.android.com/studio | Android emülatörü |
 | **Expo Go** (isteğe bağlı) | güncel | Play Store | Gerçek telefonda deneme |
 
@@ -18,43 +18,50 @@ Kontrol:
 
 ```bash
 node --version      # v20 veya üzeri
-docker --version
+mongod --version    # 4.4 veya üzeri
 ```
 
-> **MongoDB neden Docker'da?** Bilgisayara ayrıca MongoDB kurmaya gerek
-> kalmasın diye. Zaten kurulu bir MongoDB'niz varsa Docker'ı atlayıp
-> `apps/api/.env` içindeki `MONGO_URL` değerini kendi sunucunuza
-> çevirebilirsiniz.
+> **MongoDB kurulumu.** Windows'ta MongoDB Community Server kurulumu servisi
+> otomatik başlatır. macOS'ta Homebrew ile:
+> ```bash
+> brew tap mongodb/brew
+> brew install mongodb-community
+> brew services start mongodb-community
+> ```
 
 ---
 
-## 2. Veritabanını Başlatma (MongoDB)
+## 2. Veritabanı (MongoDB)
 
-Proje kök klasöründe (`06-apart-otel`):
-
-```bash
-docker compose up -d
-```
-
-Kontrol:
+MongoDB servisinin çalıştığından emin olun:
 
 ```bash
-docker ps       # apartotel-mongo konteyneri "Up" görünmeli
+# macOS
+brew services list | grep mongodb
+
+# Windows (PowerShell, yönetici)
+Get-Service MongoDB
 ```
 
-Bağlantı bilgileri:
+Bağlantı kontrolü:
+
+```bash
+mongosh --eval "db.version()"      # eski sürümlerde: mongo --eval "db.version()"
+```
+
+Bağlantı bilgileri (`apps/api/.env` içinde tanımlı):
 
 | Alan | Değer |
 |------|-------|
-| Adres | `mongodb://localhost:27018/pms_rentals` |
-| Port | **27018** (varsayılan 27017 değil) |
+| Adres | `mongodb://localhost:27017/pms_rentals` |
 | Veritabanı | `pms_rentals` |
 
-> Port neden 27018? Bilgisayarınızda başka bir MongoDB çalışıyorsa 27017
-> portu dolu olur. Çakışmayı önlemek için 27018 seçildi.
+> **Veritabanını elle oluşturmanıza gerek yok.** MongoDB ilk kayıt
+> eklendiğinde `pms_rentals` veritabanını ve koleksiyonları kendisi
+> oluşturur. Alan tanımları `apps/api/models/` klasöründedir.
 
-Koleksiyonları elle oluşturmanıza gerek yok; MongoDB ilk kayıtta otomatik
-oluşturur. Alan tanımları `apps/api/models/` klasöründedir.
+> Bilgisayarınızda MongoDB başka bir portta çalışıyorsa `apps/api/.env`
+> içindeki `MONGO_URL` değerini güncellemeniz yeterli.
 
 ---
 
@@ -174,8 +181,7 @@ zinciridir. Şu sırayla gösterin:
 ## 8. Çalıştırma Sırası (özet)
 
 ```bash
-# 1. Veritabanı
-docker compose up -d
+# 1. Veritabanı — MongoDB servisi çalışıyor olmalı
 
 # 2. API  (yeni terminal)
 cd apps/api && npm install && npm run seed && npm start
@@ -193,10 +199,10 @@ cd apps/mobile && npm install && npx expo start
 
 | Sorun | Çözüm |
 |-------|-------|
-| `MongoDB bağlantısı kurulamadı` | `docker ps` ile konteyneri kontrol edin; port 27018 olmalı |
+| `MongoDB bağlantısı kurulamadı` | MongoDB servisi çalışıyor mu? `.env` içindeki `MONGO_URL` doğru mu? |
 | Panelde `Sunucuya bağlanılamadı` | API çalışıyor mu? `.env.local` içindeki adres doğru mu? |
 | Mobilde `Sunucuya bağlanılamadı` | Emülatörde adres `10.0.2.2` olmalı, `localhost` değil |
 | Takvimde rezervasyon görünmüyor | Tarih aralığı dışında olabilir; **Bugün** düğmesine basın |
 | Demo verisi karıştı | `cd apps/api && npm run seed` |
 | Expo `port 8081 kullanımda` | `npx expo start --port 8085` |
-| Veritabanını tamamen sıfırlamak | `docker compose down -v && docker compose up -d`, sonra `npm run seed` |
+| Veritabanını tamamen sıfırlamak | `mongosh pms_rentals --eval "db.dropDatabase()"`, sonra `npm run seed` |

@@ -12,8 +12,8 @@ açılır.
 
 ```
                     ┌──────────────────────────┐
-                    │   MongoDB 7 (Docker)     │
-                    │   pms_rentals  :27018    │
+                    │   MongoDB (yerel)        │
+                    │   pms_rentals  :27017    │
                     └────────────┬─────────────┘
                                  │  Mongoose
                     ┌────────────┴─────────────┐
@@ -38,7 +38,7 @@ açılır.
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Veritabanı | MongoDB 7 (Docker), Mongoose |
+| Veritabanı | MongoDB 4.4+ (yerel kurulum), Mongoose 9 |
 | API | Node.js + Express 5, JWT, bcryptjs |
 | Web | Next.js 16 (App Router), React 19, Tailwind CSS 4 |
 | Mobil | React Native / Expo SDK 57, AsyncStorage |
